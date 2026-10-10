@@ -1,4 +1,4 @@
-name: Build Ticic OS APK
+name: Build Ticic APK
 on:
   workflow_dispatch:
   push:
@@ -21,10 +21,52 @@ jobs:
         run: |
           mkdir -p www && cp index.html www/index.html
           npm init -y
-          npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6
-          npx cap init "Ticic OS" com.ticic.os --web-dir www
+          npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6 @capacitor/local-notifications@6 @capacitor/app@6 @capacitor/status-bar@6
+          echo '{"appId":"com.ticic.daily","appName":"Ticic","webDir":"www","backgroundColor":"#07050F","android":{"backgroundColor":"#07050F"}}' > capacitor.config.json
           npx cap add android
+          python3 - <<'PY'
+          p = 'android/app/src/main/AndroidManifest.xml'
+          s = open(p).read()
+          perms = ''.join('<uses-permission android:name="android.permission.%s"%s/>\n' % (n, x) for n, x in [('POST_NOTIFICATIONS', ''), ('USE_EXACT_ALARM', ''), ('SCHEDULE_EXACT_ALARM', ' android:maxSdkVersion="32"'), ('VIBRATE', ''), ('RECEIVE_BOOT_COMPLETED', '')])
+          s = s.replace('</manifest>', perms + '</manifest>')
+          open(p, 'w').write(s)
+          PY
           npx cap sync android
+      - name: App icon
+        continue-on-error: true
+        run: |
+          pip install pillow
+          python3 - android/app/src/main/res <<'PY'
+          import sys,os
+          from PIL import Image, ImageDraw, ImageFilter
+          S=1024
+          def make(size, round_=False, fg_only=False):
+              im=Image.new('RGBA',(S,S),(0,0,0,0))
+              if not fg_only:
+                  bg=Image.new('RGBA',(S,S),(7,5,15,255))
+                  for cx,cy,r,c in [(220,200,520,(139,124,255)),(860,300,460,(255,95,168)),(420,950,480,(61,217,255))]:
+                      g=Image.new('RGBA',(S,S),(0,0,0,0)); d=ImageDraw.Draw(g); d.ellipse((cx-r//2,cy-r//2,cx+r//2,cy+r//2),fill=c+(170,)); g=g.filter(ImageFilter.GaussianBlur(120)); bg=Image.alpha_composite(bg,g)
+                  im=bg
+              d=ImageDraw.Draw(im)
+              w=70
+              d.line([(330,530),(460,660),(710,380)],fill=(255,255,255,255),width=w,joint='curve')
+              for p in [(330,530),(460,660),(710,380)]: d.ellipse((p[0]-w//2,p[1]-w//2,p[0]+w//2,p[1]+w//2),fill=(255,255,255,255))
+              if round_:
+                  m=Image.new('L',(S,S),0); ImageDraw.Draw(m).ellipse((0,0,S,S),fill=255); im.putalpha(m)
+              return im.resize((size,size),Image.LANCZOS)
+          res=sys.argv[1]
+          for k,sz in {'mdpi':48,'hdpi':72,'xhdpi':96,'xxhdpi':144,'xxxhdpi':192}.items():
+              d=os.path.join(res,'mipmap-'+k)
+              if not os.path.isdir(d): continue
+              make(sz).save(d+'/ic_launcher.png'); make(sz,True).save(d+'/ic_launcher_round.png')
+          import shutil
+          shutil.rmtree(os.path.join(res,'mipmap-anydpi-v26'),ignore_errors=True)
+          print('icons ok')
+          PY
+      - name: Use the same signing key every time
+        run: |
+          mkdir -p ~/.android
+          echo "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" | base64 -d > ~/.android/debug.keystore
       - name: Build APK
         run: |
           cd android
@@ -36,5 +78,5 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: apk-${{ github.run_number }}
-          name: Ticic OS APK ${{ github.run_number }}
+          name: Ticic APK ${{ github.run_number }}
           files: TicicOS.apk

@@ -20,6 +20,7 @@ jobs:
       - name: Create Android project
         run: |
           mkdir -p www && cp index.html www/index.html
+          if [ -f config.js ]; then cp config.js www/config.js; fi
           npm init -y
           npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6 @capacitor/local-notifications@6 @capacitor/app@6 @capacitor/share@6 @capgo/capacitor-native-biometric@6
           echo '{"appId":"com.ticic.daily","appName":"Ticic","webDir":"www","backgroundColor":"#BFDDFF","android":{"backgroundColor":"#BFDDFF"}}' > capacitor.config.json
@@ -116,6 +117,323 @@ jobs:
             }
           }
           JAVA
+      - name: Call-style full screen alerts
+        continue-on-error: true
+        run: |
+          D=android/app/src/main/java/com/ticic/daily
+          mkdir -p /tmp/safe
+          cp $D/MainActivity.java /tmp/safe/MainActivity.java
+          cp android/app/src/main/AndroidManifest.xml /tmp/safe/AndroidManifest.xml
+          cat > $D/TicicAlarmPlugin.java <<'JAVA'
+          package com.ticic.daily;
+
+          import android.app.Activity;
+          import android.app.AlarmManager;
+          import android.app.NotificationManager;
+          import android.app.PendingIntent;
+          import android.content.Context;
+          import android.content.Intent;
+          import android.content.SharedPreferences;
+          import android.net.Uri;
+          import android.os.Build;
+          import com.getcapacitor.JSObject;
+          import com.getcapacitor.Plugin;
+          import com.getcapacitor.PluginCall;
+          import com.getcapacitor.PluginMethod;
+          import com.getcapacitor.annotation.CapacitorPlugin;
+          import org.json.JSONArray;
+          import org.json.JSONObject;
+
+          @CapacitorPlugin(name = "TicicAlarm")
+          public class TicicAlarmPlugin extends Plugin {
+            public static String launch = null;
+
+            static PendingIntent alarmPi(Context c, int id, JSONObject o) {
+              Intent i = new Intent(c, AlarmReceiver.class);
+              i.setAction("com.ticic.daily.ALARM");
+              i.putExtra("ticic_json", o.toString());
+              return PendingIntent.getBroadcast(c, id, i, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+            }
+
+            static void cancelAll(Context c) {
+              SharedPreferences sp = c.getSharedPreferences("ticic_alarm", Context.MODE_PRIVATE);
+              AlarmManager am = (AlarmManager) c.getSystemService(Context.ALARM_SERVICE);
+              try {
+                JSONArray old = new JSONArray(sp.getString("items", "[]"));
+                for (int k = 0; k < old.length(); k++) {
+                  JSONObject o = old.getJSONObject(k);
+                  am.cancel(alarmPi(c, o.getInt("id"), o));
+                }
+              } catch (Exception e) { }
+            }
+
+            static void setOne(Context c, JSONObject o) {
+              AlarmManager am = (AlarmManager) c.getSystemService(Context.ALARM_SERVICE);
+              long at = o.optLong("at", 0);
+              if (at <= System.currentTimeMillis()) return;
+              PendingIntent pi = alarmPi(c, o.optInt("id"), o);
+              boolean exact = true;
+              if (Build.VERSION.SDK_INT >= 31) exact = am.canScheduleExactAlarms();
+              if (exact) am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pi);
+              else am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pi);
+            }
+
+            static void scheduleAll(Context c, JSONArray items) {
+              cancelAll(c);
+              JSONArray keep = new JSONArray();
+              for (int k = 0; k < items.length() && k < 60; k++) {
+                try {
+                  JSONObject o = items.getJSONObject(k);
+                  setOne(c, o);
+                  keep.put(o);
+                } catch (Exception e) { }
+              }
+              c.getSharedPreferences("ticic_alarm", Context.MODE_PRIVATE).edit().putString("items", keep.toString()).apply();
+            }
+
+            @PluginMethod
+            public void schedule(PluginCall call) {
+              JSONArray items = call.getArray("items");
+              if (items == null) items = new JSONArray();
+              scheduleAll(getContext(), items);
+              call.resolve();
+            }
+
+            @PluginMethod
+            public void test(PluginCall call) {
+              try {
+                JSONObject o = new JSONObject();
+                o.put("id", 7777);
+                o.put("at", System.currentTimeMillis() + 6000);
+                o.put("title", call.getString("title", "Ticic"));
+                o.put("body", call.getString("body", ""));
+                o.put("tone", call.getString("tone", "system"));
+                o.put("taskId", "");
+                o.put("routineId", "");
+                setOne(getContext(), o);
+              } catch (Exception e) { }
+              call.resolve();
+            }
+
+            @PluginMethod
+            public void stop(PluginCall call) {
+              NotificationManager nm = (NotificationManager) getContext().getSystemService(Context.NOTIFICATION_SERVICE);
+              Integer id = call.getInt("id");
+              if (id != null) nm.cancel(id.intValue()); else nm.cancelAll();
+              release(getActivity());
+              call.resolve();
+            }
+
+            static void release(final Activity a) {
+              if (a == null) return;
+              a.runOnUiThread(new Runnable() {
+                public void run() {
+                  if (Build.VERSION.SDK_INT >= 27) a.setShowWhenLocked(false);
+                }
+              });
+            }
+
+            @PluginMethod
+            public void pending(PluginCall call) {
+              JSObject r = new JSObject();
+              if (launch != null) { r.put("launch", launch); launch = null; }
+              call.resolve(r);
+            }
+
+            @PluginMethod
+            public void status(PluginCall call) {
+              JSObject r = new JSObject();
+              boolean full = true;
+              if (Build.VERSION.SDK_INT >= 34) {
+                NotificationManager nm = (NotificationManager) getContext().getSystemService(Context.NOTIFICATION_SERVICE);
+                full = nm.canUseFullScreenIntent();
+              }
+              r.put("full", full);
+              call.resolve(r);
+            }
+
+            @PluginMethod
+            public void openFullScreenSettings(PluginCall call) {
+              try {
+                Intent i = new Intent("android.settings.MANAGE_APP_USE_FULL_SCREEN_INTENT", Uri.parse("package:" + getContext().getPackageName()));
+                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                getContext().startActivity(i);
+              } catch (Exception e) { }
+              call.resolve();
+            }
+          }
+          JAVA
+          cat > $D/AlarmReceiver.java <<'JAVA'
+          package com.ticic.daily;
+
+          import android.app.Notification;
+          import android.app.NotificationChannel;
+          import android.app.NotificationManager;
+          import android.app.PendingIntent;
+          import android.content.BroadcastReceiver;
+          import android.content.Context;
+          import android.content.Intent;
+          import android.media.AudioAttributes;
+          import android.media.RingtoneManager;
+          import android.net.Uri;
+          import android.os.Build;
+          import org.json.JSONArray;
+          import org.json.JSONObject;
+
+          public class AlarmReceiver extends BroadcastReceiver {
+            @Override
+            public void onReceive(Context c, Intent in) {
+              String a = in.getAction();
+              if (a == null) return;
+              if (a.equals("com.ticic.daily.ALARM")) {
+                try { ring(c, new JSONObject(in.getStringExtra("ticic_json"))); } catch (Exception e) { }
+              } else if (a.equals(Intent.ACTION_BOOT_COMPLETED) || a.equals(Intent.ACTION_MY_PACKAGE_REPLACED)) {
+                try {
+                  String s = c.getSharedPreferences("ticic_alarm", Context.MODE_PRIVATE).getString("items", "[]");
+                  JSONArray arr = new JSONArray(s);
+                  for (int k = 0; k < arr.length(); k++) TicicAlarmPlugin.setOne(c, arr.getJSONObject(k));
+                } catch (Exception e) { }
+              }
+            }
+
+            static PendingIntent open(Context c, int code, JSONObject o, String act) throws Exception {
+              JSONObject x = new JSONObject(o.toString());
+              if (act != null) x.put("act", act);
+              Intent i = new Intent(c, MainActivity.class);
+              i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+              i.putExtra("ticic_alarm", x.toString());
+              return PendingIntent.getActivity(c, code, i, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+            }
+
+            static void ring(Context c, JSONObject o) throws Exception {
+              NotificationManager nm = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
+              int id = o.optInt("id");
+              String tone = o.optString("tone", "system");
+              int res = c.getResources().getIdentifier("tone_" + tone, "raw", c.getPackageName());
+              Uri sound = res != 0 ? Uri.parse("android.resource://" + c.getPackageName() + "/" + res) : RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
+              String ch = "call_" + (res != 0 ? tone : "system");
+              if (Build.VERSION.SDK_INT >= 26 && nm.getNotificationChannel(ch) == null) {
+                NotificationChannel nc = new NotificationChannel(ch, "Call-style reminders", NotificationManager.IMPORTANCE_HIGH);
+                AudioAttributes at = new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE).setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build();
+                nc.setSound(sound, at);
+                nc.enableVibration(true);
+                nc.setVibrationPattern(new long[] { 0, 500, 300, 500, 300, 500 });
+                nc.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
+                nm.createNotificationChannel(nc);
+              }
+              PendingIntent main = open(c, id, o, null);
+              Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(c, ch) : new Notification.Builder(c);
+              b.setSmallIcon(android.R.drawable.ic_popup_reminder);
+              b.setContentTitle(o.optString("title"));
+              b.setContentText(o.optString("body"));
+              b.setCategory(Notification.CATEGORY_ALARM);
+              b.setVisibility(Notification.VISIBILITY_PUBLIC);
+              b.setOngoing(true);
+              b.setAutoCancel(false);
+              b.setContentIntent(main);
+              b.setFullScreenIntent(main, true);
+              if (Build.VERSION.SDK_INT >= 26) b.setTimeoutAfter(90000);
+              if (Build.VERSION.SDK_INT < 26) {
+                b.setPriority(Notification.PRIORITY_MAX);
+                b.setSound(sound);
+                b.setVibrate(new long[] { 0, 500, 300, 500, 300, 500 });
+              }
+              if (o.optString("taskId").length() > 0) {
+                b.addAction(0, "Done", open(c, id ^ 0x20000000, o, "done"));
+                b.addAction(0, "Snooze", open(c, id ^ 0x10000000, o, "snooze"));
+              }
+              Notification n = b.build();
+              n.flags |= Notification.FLAG_INSISTENT;
+              nm.notify(id, n);
+            }
+          }
+          JAVA
+          cat > $D/MainActivity.java <<'JAVA'
+          package com.ticic.daily;
+
+          import android.content.Intent;
+          import android.graphics.Color;
+          import android.os.Build;
+          import android.os.Bundle;
+          import android.webkit.JavascriptInterface;
+          import android.webkit.WebView;
+          import androidx.core.graphics.Insets;
+          import androidx.core.view.ViewCompat;
+          import androidx.core.view.WindowCompat;
+          import androidx.core.view.WindowInsetsCompat;
+          import androidx.core.view.WindowInsetsControllerCompat;
+          import com.getcapacitor.BridgeActivity;
+
+          public class MainActivity extends BridgeActivity {
+            int top = 0, bottom = 0, kb = 0;
+
+            class Ins {
+              @JavascriptInterface
+              public String get() { return top + "," + bottom + "," + kb; }
+            }
+
+            void push() {
+              final String js = "window.__setInsets&&window.__setInsets(" + top + "," + bottom + "," + kb + ")";
+              final WebView w = getBridge().getWebView();
+              w.post(() -> w.evaluateJavascript(js, null));
+            }
+
+            void alarmIntent(Intent in) {
+              if (in == null) return;
+              final String j = in.getStringExtra("ticic_alarm");
+              if (j == null) return;
+              in.removeExtra("ticic_alarm");
+              if (Build.VERSION.SDK_INT >= 27) {
+                setShowWhenLocked(true);
+                setTurnScreenOn(true);
+              }
+              TicicAlarmPlugin.launch = j;
+              final WebView w = getBridge().getWebView();
+              w.postDelayed(() -> {
+                String q = j.replace("\\", "\\\\").replace("'", "\\'");
+                w.evaluateJavascript("window.__ticicAlarm&&window.__ticicAlarm('" + q + "')", null);
+              }, 400);
+            }
+
+            @Override
+            protected void onNewIntent(Intent intent) {
+              super.onNewIntent(intent);
+              alarmIntent(intent);
+            }
+
+            @Override
+            public void onCreate(Bundle savedInstanceState) {
+              registerPlugin(TicicAlarmPlugin.class);
+              super.onCreate(savedInstanceState);
+              WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+              getWindow().setStatusBarColor(Color.TRANSPARENT);
+              getWindow().setNavigationBarColor(Color.TRANSPARENT);
+              WindowInsetsControllerCompat c = WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+              c.setAppearanceLightStatusBars(true);
+              c.setAppearanceLightNavigationBars(true);
+              getBridge().getWebView().addJavascriptInterface(new Ins(), "TicicInsets");
+              ViewCompat.setOnApplyWindowInsetsListener(getWindow().getDecorView(), (v, insets) -> {
+                Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout());
+                Insets ime = insets.getInsets(WindowInsetsCompat.Type.ime());
+                float d = getResources().getDisplayMetrics().density;
+                top = Math.round(bars.top / d);
+                bottom = Math.round(bars.bottom / d);
+                kb = Math.round(Math.max(0, ime.bottom - bars.bottom) / d);
+                push();
+                return insets;
+              });
+              alarmIntent(getIntent());
+            }
+          }
+          JAVA
+          python3 - <<'PY'
+          p = 'android/app/src/main/AndroidManifest.xml'
+          s = open(p).read()
+          s = s.replace('</manifest>', '<uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT"/>\n</manifest>')
+          s = s.replace('</application>', '<receiver android:name=".AlarmReceiver" android:exported="true"><intent-filter><action android:name="android.intent.action.BOOT_COMPLETED"/><action android:name="android.intent.action.MY_PACKAGE_REPLACED"/></intent-filter></receiver>\n</application>')
+          open(p, 'w').write(s)
+          PY
+          touch /tmp/safe/call_added
       - name: App icon from your logo
         continue-on-error: true
         run: |
@@ -157,7 +475,18 @@ jobs:
           mkdir -p ~/.android
           echo "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" | base64 -d > ~/.android/debug.keystore
       - name: Build APK
+        id: full
+        continue-on-error: true
         run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+      - name: Build APK again without the call screen (only runs if the first build failed)
+        if: steps.full.outcome == 'failure'
+        run: |
+          D=android/app/src/main/java/com/ticic/daily
+          if [ -f /tmp/safe/MainActivity.java ]; then cp /tmp/safe/MainActivity.java $D/MainActivity.java; cp /tmp/safe/AndroidManifest.xml android/app/src/main/AndroidManifest.xml; fi
+          rm -f $D/TicicAlarmPlugin.java $D/AlarmReceiver.java
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug

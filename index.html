@@ -407,6 +407,24 @@ textarea:focus{border-color:rgb(var(--blue))}
 .ferr{min-height:22px;margin:8px 4px 0;font-size:13.5px;font-weight:500;color:#D9402F}
 .fld.shake{animation:shake .45s}
 .pst.prof{margin-bottom:8px}
+#call{position:fixed;inset:0;z-index:200;display:none;background:linear-gradient(180deg,#3A86FF 0%,#0B5BE0 55%,#063A9C 100%);opacity:0;transition:opacity .45s var(--apple);color:#fff;overflow:hidden}
+#call.on{display:block}#call.show{opacity:1}
+.callin{height:100%;display:flex;flex-direction:column;align-items:center;text-align:center;padding:calc(64px + var(--sat)) 28px calc(28px + var(--sabs));max-width:420px;margin:0 auto}
+.cstat{font-size:15px;font-weight:600;letter-spacing:.02em;opacity:.85}
+.cav{position:relative;width:132px;height:132px;margin:44px 0 30px;display:grid;place-items:center}
+.cav span{position:relative;width:112px;height:112px;border-radius:50%;background:#fff;display:grid;place-items:center;box-shadow:0 18px 34px -12px rgba(0,20,80,.6)}
+.cl{width:66px;height:66px;object-fit:contain}
+.cav i{position:absolute;inset:0;border-radius:50%;border:2px solid rgba(255,255,255,.7);animation:cring 2.2s ease-out infinite}
+.cav i+i{animation-delay:1.1s}
+@keyframes cring{0%{transform:scale(.86);opacity:.9}100%{transform:scale(1.55);opacity:0}}
+.ctitle{margin:0;font-size:32px;line-height:1.12;font-weight:700;letter-spacing:-.03em;overflow-wrap:anywhere}
+.cbody{margin:10px 0 0;font-size:17px;opacity:.85}
+.cnow{margin-top:18px;font-size:15px;font-weight:600;padding:6px 14px;border-radius:999px;background:rgba(255,255,255,.18)}
+.cfoot{margin-top:auto;width:100%;display:flex;flex-direction:column;gap:14px;align-items:center}
+.csn{height:50px;padding:0 26px;border-radius:999px;background:rgba(255,255,255,.18);color:#fff;font-weight:600;font-size:16px}
+.cgo{width:100%;background:rgba(255,255,255,.2)!important;box-shadow:none!important;color:#fff}
+.cgo .arr{background:#fff;color:#0B5BE0}
+@media (prefers-reduced-motion:reduce){.cav i{animation:none}}
 #lock{position:fixed;inset:0;z-index:90;display:none;background:linear-gradient(180deg,#4F9BFF 0%,#8FC0FF 36%,#D7E8FF 70%,#F3F8FF 100%);opacity:0;transition:opacity .5s var(--apple);overflow-y:auto}
 #lock.on{display:block}
 #lock.show{opacity:1}
@@ -462,7 +480,8 @@ textarea:focus{border-color:rgb(var(--blue))}
 <button type="button" class="tab" data-tab="guide"><svg class="ic" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg><span>Guide</span></button>
 <button type="button" class="tab" data-tab="lists"><svg class="ic" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M9 6h12M9 12h12M9 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg><span>Lists</span></button>
 </nav>
-<div id="sheets"></div><div id="toast" role="status" aria-live="polite"></div><div id="banner" aria-live="assertive"></div><div id="onb"></div><div id="lock"></div>
+<div id="sheets"></div><div id="toast" role="status" aria-live="polite"></div><div id="banner" aria-live="assertive"></div><div id="onb"></div><div id="lock"></div><div id="call"></div>
+<script src="config.js"></script>
 <script>(function(){
 "use strict";
 /* core.js: helpers, state, smart parser, reminder schedule, notifications */
@@ -735,6 +754,7 @@ const NAT = (() => {
       try { await LN.registerActionTypes({ types: [{ id: 'TASK', actions: [{ id: 'done', title: 'Done' }, { id: 'snooze', title: 'Snooze' }] }] }); } catch (e) {}
       try { LN.addListener('localNotificationActionPerformed', ev => handlers(ev)); } catch (e) {}
     },
+    clear() { if (!(native && LN)) return Promise.resolve(); chain = chain.then(async () => { try { const pend = await LN.getPending(); if (pend.notifications && pend.notifications.length) await LN.cancel({ notifications: pend.notifications.map(n => ({ id: n.id })) }); } catch (e) {} }); return chain; },
     sync(items) {
       if (!(native && LN)) return Promise.resolve();
       chain = chain.then(async () => {
@@ -1200,6 +1220,46 @@ async function pinHash(salt, pin) {
   catch (e) { return 'h' + hash(salt + ':' + pin); }
 }
 const digits = s => String(s || '').replace(/\D/g, '');
+
+/* ----- online account (Supabase) so you can log in again after reinstalling ----- */
+const CLOUD = window.TICIC_CLOUD || {};
+const cloudOn = () => /^https:\/\/[^ ]+$/.test(CLOUD.url || '') && String(CLOUD.key || '').length > 20;
+async function cloudHash(full, pin) {
+  try {
+    const km = await crypto.subtle.importKey('raw', new TextEncoder().encode(full + ':' + pin), 'PBKDF2', false, ['deriveBits']);
+    const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: new TextEncoder().encode('ticic.v1.' + full), iterations: 60000 }, km, 256);
+    return Array.from(new Uint8Array(bits)).map(x => x.toString(16).padStart(2, '0')).join('');
+  } catch (e) { return 'h' + hash('ticic.v1.' + full + ':' + pin); }
+}
+async function cloudCall(fn, body) {
+  const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 15000);
+  try {
+    const r = await fetch(CLOUD.url.replace(/\/$/, '') + '/rest/v1/rpc/' + fn, { method: 'POST', signal: ctl.signal, headers: { 'Content-Type': 'application/json', apikey: CLOUD.key, Authorization: 'Bearer ' + CLOUD.key }, body: JSON.stringify(body) });
+    if (!r.ok) throw new Error('http ' + r.status); return await r.json();
+  } finally { clearTimeout(to); }
+}
+const fullPhone = p => p.cc + p.phone;
+function cloudPayload() { const d = JSON.parse(JSON.stringify(S)); ['profile', 'bioOn', 'noLogin', 'lockOn', 'cloudAt'].forEach(k => delete d[k]); return d; }
+let cloudT = null, cloudDeny = false;
+function cloudPush(now) {
+  if (!cloudOn() || !S.profile || !S.profile.ck) return;
+  clearTimeout(cloudT);
+  cloudT = setTimeout(async () => {
+    try {
+      const r = await cloudCall('ticic_push', { p_phone: fullPhone(S.profile), p_hash: S.profile.ck, p_data: cloudPayload() });
+      if (r === 'denied') { if (!cloudDeny) { cloudDeny = true; toast('Online backup paused. The password was changed elsewhere.'); } }
+      else { cloudDeny = false; S.cloudAt = Date.now(); save(); }
+    } catch (e) {}
+  }, now ? 0 : 4000);
+}
+function restoreFrom(d) {
+  const f = freshState(); S = Object.assign(f, d || {});
+  if (!S.plans || typeof S.plans !== 'object') S.plans = {};
+  S.settings = Object.assign(f.settings, (d && d.settings) || {});
+  ['tasks', 'history', 'routines', 'lists', 'feedback'].forEach(k => { if (!Array.isArray(S[k])) S[k] = f[k]; });
+  if (!S.lists.some(l => l.id === 'inbox')) S.lists.unshift(f.lists[0]);
+}
+
 const lockEnabled = () => !!(S.profile && S.lockOn !== false);
 const maskPhone = () => { const p = S.profile; if (!p) return ''; const d = p.phone; return (p.cc || '+91') + ' ' + d.slice(0, 2) + '••••' + d.slice(-2); };
 const FIELD_password = (id, ph) => '<div class="fld full"><input id="' + id + '" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" data-digits="4" autocomplete="off" placeholder="' + ph + '"></div>';
@@ -1233,11 +1293,21 @@ async function submitProfile(ask) {
   if (!checkPhone(cc, ph)) return onbError('Enter a valid mobile number, 7 to 12 digits.', 'o-phone');
   if (!/^\d{4}$/.test(pin)) return onbError('The password must be exactly 4 digits.', 'o-pin');
   if (pin !== pin2) return onbError('The two passwords do not match.', 'o-pin2');
+  let ck = null;
+  if (cloudOn()) {
+    const btn = $('[data-act="o-enable"]') || $('[data-act="o-skip"]'); if (btn) btn.disabled = true;
+    try {
+      ck = await cloudHash(cc + ph, pin);
+      const r = await cloudCall('ticic_pull', { p_phone: cc + ph, p_hash: ck });
+      if (r && r.s !== 'none') { if (btn) btn.disabled = false; return onbError('This number already has an account. Tap Log in above.', 'o-phone'); }
+    } catch (e) { /* offline: continue, it will back up later */ }
+    if (btn) btn.disabled = false;
+  }
   const salt = uid();
-  S.noLogin = false; S.name = name; S.profile = { cc, phone: ph, salt, pin: await pinHash(salt, pin) }; S.lockOn = true;
+  S.noLogin = false; S.name = name; S.profile = { cc, phone: ph, salt, pin: await pinHash(salt, pin), ck }; S.lockOn = true;
   askedAuto = true; const first = !S.onboarded; S.onboarded = true;
   if (first && !S.tasks.length) addExamples();
-  closeOnboarding(); commit();
+  closeOnboarding(); commit(); cloudPush(true);
   toast('Welcome, ' + name);
   if (ask) { const s = await NAT.ask(); NAT_state = V.notif = s; render(); if (s === 'granted') { syncNow(); toast('Reminders are on'); } else if (s === 'denied') toast('Reminders are blocked in phone settings'); }
 }
@@ -1303,16 +1373,30 @@ async function lockTry() {
 }
 const AUTH_ACT = {
   'o-next'() { showProfileStep('signup'); },
+  's-cloud'() { if (!cloudOn() || !S.profile || !S.profile.ck) return toast('Online saving is not on'); cloudPush(true); toast('Saving online...'); setTimeout(() => { if (V.sheet === 'settings') openSettings(); }, 1800); },
   'o-mode'(el) { showProfileStep(el.dataset.v); },
   async 'o-login'() {
     const cc = ($('#o-cc').value.trim() || '+91').replace(/^(\d)/, '+$1'), ph = digits($('#o-phone').value), pin = $('#o-pin').value, p = S.profile;
-    if (!p) return onbError('No account on this phone yet. Tap Sign up to create one.', 'o-phone');
     if (!checkPhone(cc, ph)) return onbError('Enter a valid mobile number.', 'o-phone');
-    if (ph !== p.phone || cc !== p.cc) return onbError('This number is not signed up on this phone.', 'o-phone');
     if (!/^\d{4}$/.test(pin)) return onbError('The password is 4 digits.', 'o-pin');
-    if (await pinHash(p.salt, pin) !== p.pin) return onbError('Wrong password. Try again.', 'o-pin');
-    S.noLogin = false; S.onboarded = true; S.lockOn = true; if (!S.tasks.length) addExamples();
-    closeOnboarding(); commit(); toast('Welcome back' + (S.name ? ', ' + S.name : ''));
+    if (p && ph === p.phone && cc === p.cc) {
+      if (await pinHash(p.salt, pin) !== p.pin) return onbError('Wrong password. Try again.', 'o-pin');
+      if (cloudOn() && !p.ck) p.ck = await cloudHash(cc + ph, pin);
+      S.noLogin = false; S.onboarded = true; S.lockOn = true; if (!S.tasks.length) addExamples();
+      closeOnboarding(); commit(); cloudPush(true); toast('Welcome back' + (S.name ? ', ' + S.name : '')); return;
+    }
+    if (!cloudOn()) return onbError(p ? 'This number is not signed up on this phone.' : 'No account on this phone yet. Tap Sign up to create one.', 'o-phone');
+    const g = $('[data-act="o-login"] .gt'); if (g) g.textContent = 'Checking...';
+    let r, ck;
+    try { ck = await cloudHash(cc + ph, pin); r = await cloudCall('ticic_pull', { p_phone: cc + ph, p_hash: ck }); }
+    catch (e) { if (g) g.textContent = 'Slide to log in'; return onbError('No internet. Connect and try again.', 'o-phone'); }
+    if (g) g.textContent = 'Slide to log in';
+    if (!r || r.s === 'none') return onbError('No account found for this number. Tap Sign up.', 'o-phone');
+    if (r.s === 'locked') return onbError('Too many wrong tries. Try again in 15 minutes.', 'o-pin');
+    if (r.s !== 'ok') return onbError('Wrong password. Try again.', 'o-pin');
+    const salt = uid(); restoreFrom(r.data);
+    S.profile = { cc, phone: ph, salt, pin: await pinHash(salt, pin), ck }; S.lockOn = true; S.noLogin = false; S.onboarded = true; S.cloudAt = Date.now();
+    closeOnboarding(); commit(); toast('Welcome back' + (S.name ? ', ' + S.name : '') + '. Your tasks are restored.');
   },
   'o-cancel'() { S.noLogin = true; save(); closeOnboarding(); },
   'o-nologin'() {
@@ -1343,7 +1427,7 @@ const AUTH_ACT = {
     if (ph !== S.profile.phone) return err('That is not the number you signed up with.');
     if (!/^\d{4}$/.test(a)) return err('The new password must be exactly 4 digits.');
     if (a !== b) return err('The two passwords do not match.');
-    S.profile.salt = uid(); S.profile.pin = await pinHash(S.profile.salt, a); save(); LOCK.fails = 0; LOCK.until = 0;
+    S.profile.salt = uid(); S.profile.pin = await pinHash(S.profile.salt, a); if (cloudOn()) S.profile.ck = null; save(); LOCK.fails = 0; LOCK.until = 0;
     hideLock(); toast('Password changed');
   },
   /* settings */
@@ -1357,6 +1441,13 @@ const AUTH_ACT = {
     if (await pinHash(S.profile.salt, cur) !== S.profile.pin) return err('Your current password is not right.');
     if (!/^\d{4}$/.test(a)) return err('The new password must be exactly 4 digits.');
     if (a !== b) return err('The two new passwords do not match.');
+    if (cloudOn() && S.profile.ck) {
+      try {
+        const nk = await cloudHash(fullPhone(S.profile), a), r = await cloudCall('ticic_change', { p_phone: fullPhone(S.profile), p_old: S.profile.ck, p_new: nk });
+        if (r !== 'ok') return err('Could not change it online. Try again later.');
+        S.profile.ck = nk;
+      } catch (e) { return err('Connect to the internet to change your password.'); }
+    }
     S.profile.salt = uid(); S.profile.pin = await pinHash(S.profile.salt, a); S.lockOn = true; save(); closeSheet(); toast('Password changed');
   },
   async 'num-save'() {
@@ -1364,7 +1455,7 @@ const AUTH_ACT = {
     const cur = $('#pn-cur').value, cc = ($('#pn-cc').value.trim() || '+91').replace(/^(\d)/, '+$1'), ph = digits($('#pn-phone').value);
     if (await pinHash(S.profile.salt, cur) !== S.profile.pin) return err('Your current password is not right.');
     if (!checkPhone(cc, ph)) return err('Enter a valid mobile number, 7 to 12 digits.');
-    S.profile.cc = cc; S.profile.phone = ph; commit(); closeSheet(); toast('Number updated');
+    S.profile.cc = cc; S.profile.phone = ph; if (cloudOn()) S.profile.ck = await cloudHash(cc + ph, cur); commit(); cloudPush(true); closeSheet(); toast('Number updated');
   }
 };
 function openPinSheet() {
@@ -1385,6 +1476,7 @@ function profileBlock() {
   return '<div class="lbl">Login</div><div class="pst prof"><b>' + esc(maskPhone()) + '</b><span>Your login number on this phone</span></div>' +
     '<div class="orow sw-row"><span>Ask for password when opening<small>Locks after 30 seconds away</small></span><button type="button" class="sw' + (lockEnabled() ? ' on' : '') + '" role="switch" aria-checked="' + lockEnabled() + '" aria-label="Ask for password when opening" data-act="s-lock"></button></div>' +
     '<div class="orow sw-row"><span>Unlock with fingerprint<small>' + (BIO.plugin() ? 'Your password always works too' : 'Works in the installed app') + '</small></span><button type="button" class="sw' + (S.bioOn ? ' on' : '') + '" role="switch" aria-checked="' + !!S.bioOn + '" aria-label="Unlock with fingerprint" data-act="s-bio"></button></div>' +
+    (cloudOn() ? '<div class="orow"><span>Saved online<small>' + (S.profile.ck ? (S.cloudAt ? 'Last saved ' + relWhen(S.cloudAt) : 'Waiting for the first save') : 'Paused after a password reset on this phone') + '</small></span><button type="button" class="btn ghost sm" data-act="s-cloud">Save now</button></div>' : '') +
     '<div class="btnrow"><button type="button" class="btn ghost sm" data-act="s-pin">Change password</button><button type="button" class="btn ghost sm" data-act="s-num">Change number</button><button type="button" class="btn ghost sm" data-act="s-locknow">Lock now</button></div>';
 }
 /* lock again after the app was away for 30 seconds */
@@ -1516,10 +1608,18 @@ const PLAN_ACT = {
 
 /* main.js: actions, ticker, native hooks, boot */
 let syncT = 0, busy = false, lastRender = Date.now();
-function syncNow() { return NAT.sync(buildSchedule(new Date())); }
+function syncNow() {
+  const items = buildSchedule(new Date());
+  if (nativeCall()) {
+    if (NAT_state !== 'granted') return Promise.resolve();
+    return CALLN.p().schedule({ items: items.map(i => ({ id: i.id, at: i.at.getTime(), title: i.title, body: i.body || '', tone: i.sound || 'system', taskId: i.taskId || '', routineId: i.routineId || '' })) })
+      .then(() => NAT.clear()).catch(() => NAT.sync(items));
+  }
+  return NAT.sync(items);
+}
 function commit() {
   save(); render(); lastRender = Date.now();
-  clearTimeout(syncT); syncT = setTimeout(syncNow, 350);
+  clearTimeout(syncT); syncT = setTimeout(syncNow, 350); cloudPush();
 }
 const num = v => (v !== '' && !isNaN(Number(v)) ? Number(v) : v);
 
@@ -1603,6 +1703,52 @@ function closeAll() {
 function finishOnboarding(ask) { return submitProfile(ask); }
 
 
+
+/* ---------- call-style full screen reminder ---------- */
+const CALLN = {
+  ok: false, full: true,
+  p() { const C = window.Capacitor; return C && C.isNativePlatform && C.isNativePlatform() ? (C.Plugins || {}).TicicAlarm : null; },
+  async check() { const p = this.p(); if (!p) { this.ok = false; return false; } try { const r = await p.status(); this.ok = true; this.full = !(r && r.full === false); } catch (e) { this.ok = false; } return this.ok; }
+};
+const callOn = () => S.settings.call !== false;
+const nativeCall = () => CALLN.ok && callOn();
+let CALL = null;
+function showCall(item) {
+  if (!item || (CALL && CALL.item.id === item.id)) return;
+  const t = item.taskId ? taskById(item.taskId) : null;
+  if (item.taskId && (!t || t.done)) return;
+  stopCall(true);
+  const el = $('#call'), isTask = !!item.taskId, d = new Date();
+  CALL = { item, timer: null, auto: null };
+  el.innerHTML = '<div class="callin"><div class="cstat">Ticic reminder</div><div class="cav"><i></i><i></i><span>' + logoImg('cl') + '</span></div>' +
+    '<h2 class="ctitle">' + esc(item.title) + '</h2><p class="cbody">' + esc(item.body || '') + '</p><div class="cnow">' + fmtTime(pad(d.getHours()) + ':' + pad(d.getMinutes())) + '</div>' +
+    '<div class="cfoot">' + (isTask ? '<button type="button" class="csn" data-act="c-snooze">Snooze ' + (S.settings.snooze || 10) + ' min</button>' : '') +
+    '<button type="button" class="btn big go cgo" data-act="' + (isTask ? 'c-done' : 'c-open') + '"><span class="arr">' + ic('back', 20) + '</span><span class="gt">' + (isTask ? 'Slide to complete' : 'Slide to open') + '</span></button></div></div>';
+  el.classList.add('on'); void el.offsetWidth; el.classList.add('show');
+  const ring = () => { try { navigator.vibrate && navigator.vibrate([400, 200, 400]); } catch (e) {} if (!nativeCall()) playTone(item.sound); };
+  ring(); CALL.timer = setInterval(ring, 3200);
+  CALL.auto = setTimeout(() => stopCall(), 120000);
+}
+function stopCall(quick) {
+  if (!CALL) return; const c = CALL; CALL = null;
+  clearInterval(c.timer); clearTimeout(c.auto);
+  try { navigator.vibrate && navigator.vibrate(0); } catch (e) {}
+  const p = CALLN.p(); if (p && CALLN.ok) { try { p.stop({ id: c.item.id }); } catch (e) {} }
+  const el = $('#call'); el.classList.remove('show');
+  if (quick) { el.classList.remove('on'); el.innerHTML = ''; } else setTimeout(() => { if (!CALL) { el.classList.remove('on'); el.innerHTML = ''; } }, 450);
+}
+window.__ticicAlarm = j => {
+  try {
+    const x = typeof j === 'string' ? JSON.parse(j) : j; if (!x) return;
+    const item = { id: x.id, title: x.title, body: x.body, sound: x.tone, taskId: x.taskId || '', routineId: x.routineId || '' };
+    const t = item.taskId && taskById(item.taskId);
+    if (x.act === 'done' && t) { if (!t.done) { completeTask(t); commit(); } const p = CALLN.p(); p && p.stop({ id: x.id }); return; }
+    if (x.act === 'snooze' && t) { snooze(item.taskId); const p = CALLN.p(); p && p.stop({ id: x.id }); return; }
+    showCall(item);
+  } catch (e) {}
+};
+async function callPending() { const p = CALLN.p(); if (!p || !CALLN.ok) return; try { const r = await p.pending(); if (r && r.launch) window.__ticicAlarm(r.launch); } catch (e) {} }
+
 /* notifications inbox */
 function relWhen(at) {
   const ms = at - Date.now(), a = Math.abs(ms), m = Math.round(a / 60000), h = Math.round(a / 3600000);
@@ -1621,6 +1767,9 @@ function openNotifs() {
   const up = all.filter(i => i.at >= now).slice(0, 12), past = all.filter(i => i.at < now).reverse().slice(0, 6);
   let h = '<div class="shead"><h2>Notifications</h2><button type="button" class="link" data-act="sheet-close">Done</button></div>';
   if (V.notif !== 'granted' && V.notif !== 'unsupported') h += '<div class="pst prompt"><b>Reminders are off</b><span>Turn them on so your phone can notify you.</span></div><div class="btnrow"><button type="button" class="btn glow sm" data-act="n-enable">Turn on reminders</button></div>';
+  h += '<div class="orow sw-row"><span>Call-style alert<small>Full screen with a ringtone until you slide to complete</small></span><button type="button" class="sw' + (callOn() ? ' on' : '') + '" role="switch" aria-checked="' + callOn() + '" aria-label="Call-style alert" data-act="n-call"></button></div>';
+  if (CALLN.ok && callOn() && !CALLN.full) h += '<div class="pst prompt"><b>Full screen is blocked</b><span>Allow it so the alert opens over your lock screen.</span></div><div class="btnrow"><button type="button" class="btn glow sm" data-act="n-full">Allow full screen</button></div>';
+  if (callOn()) h += '<div class="btnrow"><button type="button" class="btn ghost sm" data-act="n-try">Try it now</button></div>';
   h += '<div class="lbl">Coming up</div>' + (up.length ? '<div class="nlist">' + up.map(notifRow).join('') + '</div>' : '<p class="hint">No reminders waiting. Add a task with a time and it shows up here.</p>');
   if (past.length) h += '<div class="lbl">Earlier</div><div class="nlist">' + past.map(notifRow).join('') + '</div>';
   openSheet(h, 'tall');
@@ -1638,6 +1787,17 @@ async function autoAsk() {
 
 /* ---------- actions ---------- */
 const ACT = {
+  'c-done'() { if (!CALL) return; const t = taskById(CALL.item.taskId); try { navigator.vibrate && navigator.vibrate(20); } catch (e) {} if (t && !t.done) { completeTask(t, true); commit(); toast('Done: ' + t.title); } stopCall(); },
+  'c-snooze'() { if (!CALL) return; const id = CALL.item.taskId; stopCall(); snooze(id); },
+  'c-open'() { if (!CALL) return; const r = CALL.item.routineId; stopCall(); go('today'); if (r) setTimeout(() => openRoutine(r), 350); },
+  'n-call'(el) { S.settings.call = !callOn(); el.classList.toggle('on', callOn()); el.setAttribute('aria-checked', callOn()); save(); const p = CALLN.p(); if (!callOn() && p && CALLN.ok) { try { p.schedule({ items: [] }); } catch (e) {} } syncNow(); closeSheet(); setTimeout(openNotifs, 350); },
+  'n-full'() { const p = CALLN.p(); if (p) { try { p.openFullScreenSettings(); } catch (e) {} } },
+  'n-try'() {
+    const sample = { id: 7777, title: 'Call mom', body: 'This is how your reminders will look', sound: S.settings.sound || 'system', taskId: '', routineId: '' };
+    const p = CALLN.p();
+    if (nativeCall() && p) { closeSheet(); p.test({ id: 7777, title: sample.title, body: sample.body, tone: sample.sound }); toast('Lock your phone. It rings in 6 seconds.'); }
+    else { closeSheet(); setTimeout(() => showCall(sample), 350); }
+  },
   notifs() { openNotifs(); },
   async 'n-enable'() { const st = await NAT.ask(); NAT_state = V.notif = st; if (st === 'granted') { await syncNow(); toast('Reminders are on'); } else if (st === 'denied') toast('Reminders are blocked in phone settings'); render(); openNotifs(); },
   'n-open'(el) { const t = el.dataset.t, r = el.dataset.r; closeSheet(); setTimeout(() => { if (t) openTask(t); else if (r) openRoutine(r); }, 340); },
@@ -1894,7 +2054,7 @@ function tick() {
   if (items.length) {
     markFired(items.map(i => i.key));
     const last = items[items.length - 1];
-    showBanner(last); NAT.show(last); if (!NAT.native) playTone(last.sound);
+    if (callOn()) showCall(last); else { showBanner(last); NAT.show(last); if (!NAT.native) playTone(last.sound); }
     if (items.length > 1) setTimeout(() => toast('+' + (items.length - 1) + ' more reminders'), 600);
     lastRender = 0;
   }
@@ -1940,10 +2100,11 @@ function boot() {
   if (lockEnabled()) { showLock(true); BIO.check().then(ok => { if (ok && S.bioOn && $('#lock').classList.contains('on') && LOCK.mode === 'pad') { $('#lock').innerHTML = lockHtml(); setTimeout(lockBio, 300); } }); } else BIO.check();
   render();
   NAT.init(onNative); nativeChrome();
+  CALLN.check().then(ok => { if (ok) { callPending(); syncNow(); } });
   NAT.status().then(s => { NAT_state = V.notif = s; render(); if (s === 'granted') syncNow(); else setTimeout(autoAsk, 900); });
   if (!S.onboarded) openOnboarding(); else if (!S.profile && !S.noLogin) showProfileStep();
   tick(); setInterval(tick, 5000);
-  document.addEventListener('visibilitychange', () => { if (document.hidden) wentAway(); else { cameBack(); tick(); syncNow(); } });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) wentAway(); else { cameBack(); tick(); syncNow(); callPending(); } });
   window.__ticic = { S: () => S, tick, buildSchedule, parseQuick, commit, NAT, V, ACT, fired: () => fired };
 }
 boot();

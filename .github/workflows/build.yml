@@ -21,46 +21,135 @@ jobs:
         run: |
           mkdir -p www && cp index.html www/index.html
           npm init -y
-          npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6 @capacitor/local-notifications@6 @capacitor/app@6 @capacitor/status-bar@6
-          echo '{"appId":"com.ticic.daily","appName":"Ticic","webDir":"www","backgroundColor":"#07050F","android":{"backgroundColor":"#07050F"}}' > capacitor.config.json
+          npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6 @capacitor/local-notifications@6 @capacitor/app@6 @capacitor/share@6 @capgo/capacitor-native-biometric@6
+          echo '{"appId":"com.ticic.daily","appName":"Ticic","webDir":"www","backgroundColor":"#BFDDFF","android":{"backgroundColor":"#BFDDFF"}}' > capacitor.config.json
           npx cap add android
           python3 - <<'PY'
           p = 'android/app/src/main/AndroidManifest.xml'
           s = open(p).read()
-          perms = ''.join('<uses-permission android:name="android.permission.%s"%s/>\n' % (n, x) for n, x in [('POST_NOTIFICATIONS', ''), ('USE_EXACT_ALARM', ''), ('SCHEDULE_EXACT_ALARM', ' android:maxSdkVersion="32"'), ('VIBRATE', ''), ('RECEIVE_BOOT_COMPLETED', '')])
+          perms = ''.join('<uses-permission android:name="android.permission.%s"%s/>\n' % (n, x) for n, x in [('POST_NOTIFICATIONS', ''), ('USE_EXACT_ALARM', ''), ('SCHEDULE_EXACT_ALARM', ' android:maxSdkVersion="32"'), ('VIBRATE', ''), ('RECEIVE_BOOT_COMPLETED', ''), ('USE_BIOMETRIC', ''), ('USE_FINGERPRINT', '')])
           s = s.replace('</manifest>', perms + '</manifest>')
           open(p, 'w').write(s)
           PY
           npx cap sync android
-      - name: App icon
+      - name: Notification sounds
+        run: |
+          python3 - <<'PY'
+          import wave, struct, math, os, json
+          T = json.loads('''[{"id":"chime","name":"Chime","d":4,"p":[[1,1],[2,0.25],[3,0.1]],"n":[[1047,0,0.7],[1319,0.2,0.7],[1568,0.4,1.2]]},{"id":"bell","name":"Bell","d":2.2,"p":[[1,1],[2.76,0.5],[5.4,0.25]],"n":[[880,0,1.8]]},{"id":"marimba","name":"Marimba","d":9,"p":[[1,1],[4,0.2]],"n":[[523,0,0.4],[659,0.18,0.4],[784,0.36,0.4],[1047,0.54,0.6]]},{"id":"pulse","name":"Pulse","d":14,"p":[[1,1],[3,0.2]],"n":[[1000,0,0.14],[1000,0.22,0.14],[1000,0.44,0.14]]},{"id":"rise","name":"Rise","d":6,"p":[[1,1],[2,0.2]],"n":[[440,0,0.25],[554,0.14,0.25],[659,0.28,0.25],[880,0.42,0.8]]},{"id":"soft","name":"Soft","d":2.5,"p":[[1,1],[2,0.15]],"n":[[392,0,0.9],[523,0.35,1.2]]},{"id":"alarm","name":"Alarm","d":3,"p":[[1,1],[2,0.5],[3,0.3]],"n":[[880,0,0.28],[660,0.32,0.28],[880,0.64,0.28],[660,0.96,0.28],[880,1.28,0.28],[660,1.6,0.28]]}]''')
+          os.makedirs('android/app/src/main/res/raw', exist_ok=True)
+          R = 22050
+          for t in T:
+              L = max(n[1] + n[2] for n in t['n']) + 0.25
+              N = int(L * R)
+              buf = []
+              for i in range(N):
+                  x = i / R
+                  v = 0.0
+                  for f, st, du in t['n']:
+                      u = x - st
+                      if u < 0 or u > du + 0.15:
+                          continue
+                      env = (1 - math.exp(-u * 600)) * math.exp(-u * t['d'])
+                      if u > du:
+                          env *= max(0.0, 1 - (u - du) / 0.15)
+                      for mult, amp in t['p']:
+                          v += amp * env * math.sin(6.2831853 * f * mult * x)
+                  buf.append(v)
+              pk = max(1e-9, max(abs(b) for b in buf))
+              w = wave.open('android/app/src/main/res/raw/tone_' + t['id'] + '.wav', 'wb')
+              w.setnchannels(1); w.setsampwidth(2); w.setframerate(R)
+              w.writeframes(b''.join(struct.pack('<h', int(b / pk * 26000)) for b in buf))
+              w.close()
+          print('tones ok')
+          PY
+      - name: Full screen (edge to edge)
+        run: |
+          cat > android/app/src/main/java/com/ticic/daily/MainActivity.java <<'JAVA'
+          package com.ticic.daily;
+
+          import android.graphics.Color;
+          import android.os.Bundle;
+          import android.webkit.JavascriptInterface;
+          import android.webkit.WebView;
+          import androidx.core.graphics.Insets;
+          import androidx.core.view.ViewCompat;
+          import androidx.core.view.WindowCompat;
+          import androidx.core.view.WindowInsetsCompat;
+          import androidx.core.view.WindowInsetsControllerCompat;
+          import com.getcapacitor.BridgeActivity;
+
+          public class MainActivity extends BridgeActivity {
+            int top = 0, bottom = 0, kb = 0;
+
+            class Ins {
+              @JavascriptInterface
+              public String get() { return top + "," + bottom + "," + kb; }
+            }
+
+            void push() {
+              final String js = "window.__setInsets&&window.__setInsets(" + top + "," + bottom + "," + kb + ")";
+              final WebView w = getBridge().getWebView();
+              w.post(() -> w.evaluateJavascript(js, null));
+            }
+
+            @Override
+            public void onCreate(Bundle savedInstanceState) {
+              super.onCreate(savedInstanceState);
+              WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+              getWindow().setStatusBarColor(Color.TRANSPARENT);
+              getWindow().setNavigationBarColor(Color.TRANSPARENT);
+              WindowInsetsControllerCompat c = WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+              c.setAppearanceLightStatusBars(true);
+              c.setAppearanceLightNavigationBars(true);
+              getBridge().getWebView().addJavascriptInterface(new Ins(), "TicicInsets");
+              ViewCompat.setOnApplyWindowInsetsListener(getWindow().getDecorView(), (v, insets) -> {
+                Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout());
+                Insets ime = insets.getInsets(WindowInsetsCompat.Type.ime());
+                float d = getResources().getDisplayMetrics().density;
+                top = Math.round(bars.top / d);
+                bottom = Math.round(bars.bottom / d);
+                kb = Math.round(Math.max(0, ime.bottom - bars.bottom) / d);
+                push();
+                return insets;
+              });
+            }
+          }
+          JAVA
+      - name: App icon from your logo
         continue-on-error: true
         run: |
           pip install pillow
-          python3 - android/app/src/main/res <<'PY'
-          import sys,os
-          from PIL import Image, ImageDraw, ImageFilter
-          S=1024
-          def make(size, round_=False, fg_only=False):
-              im=Image.new('RGBA',(S,S),(0,0,0,0))
-              if not fg_only:
-                  bg=Image.new('RGBA',(S,S),(7,5,15,255))
-                  for cx,cy,r,c in [(220,200,520,(139,124,255)),(860,300,460,(255,95,168)),(420,950,480,(61,217,255))]:
-                      g=Image.new('RGBA',(S,S),(0,0,0,0)); d=ImageDraw.Draw(g); d.ellipse((cx-r//2,cy-r//2,cx+r//2,cy+r//2),fill=c+(170,)); g=g.filter(ImageFilter.GaussianBlur(120)); bg=Image.alpha_composite(bg,g)
-                  im=bg
-              d=ImageDraw.Draw(im)
-              w=70
-              d.line([(330,530),(460,660),(710,380)],fill=(255,255,255,255),width=w,joint='curve')
-              for p in [(330,530),(460,660),(710,380)]: d.ellipse((p[0]-w//2,p[1]-w//2,p[0]+w//2,p[1]+w//2),fill=(255,255,255,255))
-              if round_:
-                  m=Image.new('L',(S,S),0); ImageDraw.Draw(m).ellipse((0,0,S,S),fill=255); im.putalpha(m)
-              return im.resize((size,size),Image.LANCZOS)
-          res=sys.argv[1]
-          for k,sz in {'mdpi':48,'hdpi':72,'xhdpi':96,'xxhdpi':144,'xxxhdpi':192}.items():
-              d=os.path.join(res,'mipmap-'+k)
-              if not os.path.isdir(d): continue
-              make(sz).save(d+'/ic_launcher.png'); make(sz,True).save(d+'/ic_launcher_round.png')
-          import shutil
-          shutil.rmtree(os.path.join(res,'mipmap-anydpi-v26'),ignore_errors=True)
+          python3 - <<'PY'
+          import re, io, base64, os
+          from PIL import Image, ImageDraw
+          html = open('index.html', encoding='utf-8').read()
+          m = re.search(r'rel="icon"[^>]*href="data:image/png;base64,([^"]+)"', html)
+          logo = Image.open(io.BytesIO(base64.b64decode(m.group(1)))).convert('RGBA')
+          res = 'android/app/src/main/res'
+          def canvas(size, scale, bg=None):
+              c = Image.new('RGBA', (size, size), bg or (0, 0, 0, 0))
+              w = int(size * scale)
+              c.alpha_composite(logo.resize((w, w), Image.LANCZOS), ((size - w) // 2, (size - w) // 2))
+              return c
+          legacy = {'mdpi': 48, 'hdpi': 72, 'xhdpi': 96, 'xxhdpi': 144, 'xxxhdpi': 192}
+          fg = {'mdpi': 108, 'hdpi': 162, 'xhdpi': 216, 'xxhdpi': 324, 'xxxhdpi': 432}
+          for k in legacy:
+              d = os.path.join(res, 'mipmap-' + k)
+              os.makedirs(d, exist_ok=True)
+              canvas(legacy[k], .66, (255, 255, 255, 255)).save(d + '/ic_launcher.png')
+              r = canvas(legacy[k], .6, (255, 255, 255, 255))
+              mk = Image.new('L', r.size, 0)
+              ImageDraw.Draw(mk).ellipse((0, 0) + r.size, fill=255)
+              r.putalpha(mk)
+              r.save(d + '/ic_launcher_round.png')
+              canvas(fg[k], .48).save(d + '/ic_launcher_fg2.png')
+          os.makedirs(res + '/mipmap-anydpi-v26', exist_ok=True)
+          os.makedirs(res + '/values', exist_ok=True)
+          open(res + '/values/ticic_colors.xml', 'w').write('<?xml version="1.0" encoding="utf-8"?><resources><color name="ic_launcher_bg2">#FFFFFF</color></resources>')
+          xml = '<?xml version="1.0" encoding="utf-8"?><adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android"><background android:drawable="@color/ic_launcher_bg2"/><foreground android:drawable="@mipmap/ic_launcher_fg2"/></adaptive-icon>'
+          for n in ('ic_launcher', 'ic_launcher_round'):
+              open(res + '/mipmap-anydpi-v26/' + n + '.xml', 'w').write(xml)
           print('icons ok')
           PY
       - name: Use the same signing key every time

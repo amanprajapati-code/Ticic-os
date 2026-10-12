@@ -137,6 +137,9 @@ h1 b{font-weight:700}
 /* task card */
 .tcard{--c:var(--violet);display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:13px;padding:13px 16px 13px 13px;border-radius:26px;position:relative;overflow:hidden;
   background:linear-gradient(rgba(var(--c),.2),rgba(var(--c),.2)),var(--glass);transition:opacity .4s,transform .45s var(--apple),filter .4s}
+.tend{display:flex;align-items:center;gap:8px}
+.tdel{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:#D8362F;background:rgba(255,255,255,.7);flex:none;transition:transform .25s var(--spring),background .2s}
+.tdel:active{transform:scale(.86);background:#fff}
 .tcard.leaving{opacity:.3;transform:translateX(18px) scale(.97)}
 .tcard.isdone{opacity:.6}
 .tcard.isdone .tt{text-decoration:line-through;text-decoration-color:rgba(11,42,91,.5)}
@@ -407,6 +410,76 @@ textarea:focus{border-color:rgb(var(--blue))}
 .ferr{min-height:22px;margin:8px 4px 0;font-size:13.5px;font-weight:500;color:#D9402F}
 .fld.shake{animation:shake .45s}
 .pst.prof{margin-bottom:8px}
+#splash{position:fixed;inset:0;z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(180deg,#3A86FF 0%,#0B5BE0 60%,#063A9C 100%);color:#fff;transition:opacity .5s var(--apple),transform .5s var(--apple)}
+#splash.out{opacity:0;transform:scale(1.06);pointer-events:none}
+.spl{position:relative;width:150px;height:150px;display:grid;place-items:center}
+.slogo{position:relative;width:118px;height:118px;border-radius:34px;background:#fff;display:grid;place-items:center;box-shadow:0 24px 50px -16px rgba(0,20,80,.7);opacity:0;transform:scale(.55) rotate(-8deg);animation:spop .9s var(--spring) .15s forwards}
+.slogo img{width:74px;height:74px;object-fit:contain}
+.sring{position:absolute;inset:6px;border-radius:38px;border:2px solid rgba(255,255,255,.75);opacity:0;animation:sring 1.8s ease-out .5s infinite}
+.sring.b{animation-delay:1.1s}
+.sname{margin-top:30px;font-size:34px;font-weight:700;letter-spacing:-.04em;opacity:0;transform:translateY(14px);animation:srise .7s var(--apple) .55s forwards}
+.stag{margin-top:8px;font-size:15px;opacity:0;animation:sfade .8s ease .9s forwards}
+.sdots{margin-top:34px;display:flex;gap:8px;opacity:0;animation:sfade .5s ease 1s forwards}
+.sdots i{width:7px;height:7px;border-radius:50%;background:#fff;opacity:.5;animation:sdot 1s ease-in-out infinite}
+.sdots i:nth-child(2){animation-delay:.15s}.sdots i:nth-child(3){animation-delay:.3s}
+@keyframes spop{0%{opacity:0;transform:scale(.55) rotate(-8deg)}100%{opacity:1;transform:none}}
+@keyframes sring{0%{opacity:.8;transform:scale(1)}100%{opacity:0;transform:scale(1.7)}}
+@keyframes srise{to{opacity:1;transform:none}}
+@keyframes sfade{to{opacity:.9}}
+@keyframes sdot{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(-6px);opacity:1}}
+@media (prefers-reduced-motion:reduce){.sring,.sdots i{animation:none}}
+.avatar img,.pfbig img{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block}
+.avatar{overflow:hidden}
+.pfrow{display:flex;align-items:center;gap:14px;margin:4px 0 14px}
+.pfbig{width:76px;height:76px;border-radius:50%;flex:none;display:grid;place-items:center;font-weight:700;font-size:30px;color:#fff;background:linear-gradient(145deg,#6FB4FF,#0560E0);box-shadow:0 0 0 3px #fff,0 10px 20px -8px rgba(5,96,224,.7);overflow:hidden}
+.pfbtns{display:flex;flex-wrap:wrap;gap:8px}
+.lava.ph{padding:0;overflow:hidden}.lphoto{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.scard{padding:16px;border-radius:28px;margin:14px 0;display:flex;flex-direction:column;gap:12px;background:linear-gradient(145deg,#0E7C86 0%,#0A5C73 55%,#0B3F5E 100%)!important;border:1px solid rgba(255,255,255,.25)!important;color:#fff;box-shadow:0 18px 32px -16px rgba(8,70,95,.75)!important}
+.shd{display:flex;align-items:center;gap:12px}
+.shd>div{flex:1;min-width:0;display:flex;flex-direction:column}
+.shd b{font-size:25px;letter-spacing:-.03em}
+.shd small{font-size:13.5px;color:rgba(255,255,255,.82)}
+.sico{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.18);color:#fff;flex:none}
+.sgoal{height:34px;padding:0 12px;border-radius:999px;background:rgba(255,255,255,.2);color:#fff;font-weight:600;font-size:13px;flex:none}
+.sbtn{background:#fff!important;color:#0A5C73!important;box-shadow:none!important;align-self:flex-start}
+.sbar{height:10px;border-radius:99px;background:rgba(255,255,255,.2);overflow:hidden}
+.sbar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#8FF0D8,#fff);transition:width .8s var(--apple)}
+.swk{display:flex;gap:8px;align-items:flex-end;height:64px}
+.wb{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px}
+.wb i{display:block;width:100%;border-radius:8px;background:rgba(255,255,255,.28)}
+.wb.now i{background:#fff}
+.wb em{font-style:normal;font-size:11.5px;color:rgba(255,255,255,.8);font-weight:600}
+.shist{font-size:12.5px;color:rgba(255,255,255,.75);text-align:center}
+.hsum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:6px 0 14px}
+.hsum>div{background:#fff;border-radius:20px;padding:12px;display:flex;flex-direction:column;gap:2px}
+.hsum b{font-size:20px;letter-spacing:-.02em;color:#0A5C73}
+.hsum small{font-size:12px;color:var(--mu)}
+.hlist{display:flex;flex-direction:column;gap:8px}
+.hrow{display:grid;grid-template-columns:96px 1fr 70px;align-items:center;gap:10px;background:#fff;border-radius:18px;padding:10px 14px}
+.hd{font-size:14px;font-weight:600}
+.hb{height:8px;border-radius:99px;background:rgba(10,92,115,.12);overflow:hidden}
+.hb i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#14A3A8,#0A5C73)}
+.hn{font-size:14px;font-weight:700;text-align:right;color:#0A5C73}
+.rend{display:flex;align-items:center;gap:8px}
+.redit{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:#fff;color:#0560E0;flex:none;transition:transform .25s var(--spring)}
+.redit:active{transform:scale(.88)}
+.stepin{flex:1;min-width:0;border:0;background:transparent;font:inherit;color:inherit;padding:4px 0;outline:none}
+.stepin:focus{border-bottom:2px solid #0560E0}
+.wcard{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:6px 14px;padding:16px;border-radius:28px;margin:14px 0;text-align:left;width:100%}
+.wico{width:56px;height:56px;border-radius:18px;display:grid;place-items:center;background:linear-gradient(145deg,#FFF1CC,#FFD98A);color:#B25E00}
+.wmain{display:flex;flex-direction:column;min-width:0}
+.wmain b{font-size:28px;letter-spacing:-.03em;line-height:1.1}
+.wmain small{font-size:14px;color:var(--mu)}
+.wmain em{font-style:normal;font-size:12.5px;color:var(--mu);margin-top:2px}
+.wgo{height:34px;padding:0 14px;border-radius:999px;background:#0560E0;color:#fff;font-weight:600;font-size:13px;display:grid;place-items:center}
+.wnext{display:flex;gap:10px}
+.wd3{display:flex;flex-direction:column;align-items:center;gap:2px;color:#0B2A5B}
+.wd3 small{font-size:11.5px;color:var(--mu);font-weight:600}
+.wd3 b{font-size:13px}
+.wtip{grid-column:1/-1;font-size:13.5px;font-weight:600;color:#0560E0;background:rgba(5,96,224,.08);padding:8px 12px;border-radius:14px}
+.wrow{display:grid;grid-template-columns:96px 1fr auto;align-items:center;gap:10px;background:#fff;border-radius:18px;padding:10px 14px}
+.wri{display:flex;align-items:center;gap:8px;color:#B25E00}
+.wri small{color:var(--mu);font-size:13px}
 #call{position:fixed;inset:0;z-index:200;display:none;background:linear-gradient(180deg,#3A86FF 0%,#0B5BE0 55%,#063A9C 100%);opacity:0;transition:opacity .45s var(--apple);color:#fff;overflow:hidden}
 #call.on{display:block}#call.show{opacity:1}
 .callin{height:100%;display:flex;flex-direction:column;align-items:center;text-align:center;padding:calc(64px + var(--sat)) 28px calc(28px + var(--sabs));max-width:420px;margin:0 auto}
@@ -480,7 +553,7 @@ textarea:focus{border-color:rgb(var(--blue))}
 <button type="button" class="tab" data-tab="guide"><svg class="ic" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg><span>Guide</span></button>
 <button type="button" class="tab" data-tab="lists"><svg class="ic" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M9 6h12M9 12h12M9 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg><span>Lists</span></button>
 </nav>
-<div id="sheets"></div><div id="toast" role="status" aria-live="polite"></div><div id="banner" aria-live="assertive"></div><div id="onb"></div><div id="lock"></div><div id="call"></div>
+<div id="sheets"></div><div id="toast" role="status" aria-live="polite"></div><div id="banner" aria-live="assertive"></div><div id="onb"></div><div id="lock"></div><div id="call"></div><div id="splash" aria-hidden="true"></div>
 <script src="config.js"></script>
 <script>(function(){
 "use strict";
@@ -799,6 +872,16 @@ const IC = {
   bell: '<path d="M6 8a6 6 0 0112 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10 21a2 2 0 004 0"/>',
   check: '<path d="M5 12.5l4.5 4.5L19 7"/>',
   back: '<path d="M15 5l-7 7 7 7"/>',
+  pulse: '<path d="M3 12h4l3-8 4 16 3-8h4"/>',
+  wsun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  wmoon: '<path d="M20 14.5A8 8 0 019.5 4a8 8 0 1010.5 10.5z"/>',
+  wcloud: '<path d="M7 18a4 4 0 010-8 5.5 5.5 0 0110.5 1.5A3.3 3.3 0 0117 18z"/>',
+  wpart: '<circle cx="8" cy="8" r="2.6"/><path d="M8 2v1.4M2.5 8h1.4M3.9 3.9l1 1M12.1 3.9l-1 1"/><path d="M8.5 20a3.6 3.6 0 010-7.2 5 5 0 019.5 1.4A3 3 0 0117.5 20z"/>',
+  wrain: '<path d="M7 15a4 4 0 010-8 5.5 5.5 0 0110.5 1.5A3.3 3.3 0 0117 15z"/><path d="M8 18l-1 3M12 18l-1 3M16 18l-1 3"/>',
+  wstorm: '<path d="M7 14a4 4 0 010-8 5.5 5.5 0 0110.5 1.5A3.3 3.3 0 0117 14z"/><path d="M12 14l-2 4h3l-2 4"/>',
+  wsnow: '<path d="M7 14a4 4 0 010-8 5.5 5.5 0 0110.5 1.5A3.3 3.3 0 0117 14z"/><path d="M8 18h.01M12 19h.01M16 18h.01M10 21h.01M14 21h.01"/>',
+  wfog: '<path d="M4 8h16M4 12h12M7 16h13M4 20h9"/>',
+  pin: '<path d="M12 21s7-6.2 7-11.5A7 7 0 005 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/>',
   finger: '<path d="M12 3a7 7 0 0 0-7 7v2"/><path d="M19 12v-2a7 7 0 0 0-4-6.3"/><path d="M8.5 12v-2a3.5 3.5 0 0 1 7 0v3c0 2.6 1 4.4 2.5 5.8"/><path d="M12 10v4c0 2.2.7 3.8 1.8 5.2"/><path d="M5 15c.2 1.8.9 3.3 2 4.5"/>',
   x: '<path d="M6 6l12 12M18 6L6 18"/>',
   trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
@@ -827,6 +910,7 @@ const byTime = (a, b) => ((a.time || '99:99') < (b.time || '99:99') ? -1 : (a.ti
 const byDueTime = (a, b) => (a.due < b.due ? -1 : a.due > b.due ? 1 : byTime(a, b));
 const greeting = () => { const h = new Date().getHours(); return h < 5 ? 'Good night' : h < 12 ? 'Good morning' : h < 16 ? 'Good afternoon' : h < 20 ? 'Good evening' : 'Good night'; };
 const initial = () => (S.name || 'T').trim().charAt(0).toUpperCase();
+const avatarIn = () => S.photo ? '<img src="' + S.photo + '" alt="" draggable="false">' : esc(initial());
 const doneCountOn = d => S.tasks.filter(t => t.done && t.doneAt && t.doneAt.slice(0, 10) === d).length + S.history.filter(h => h.date === d).length;
 function streak() {
   let d = today(), n = 0;
@@ -861,7 +945,7 @@ function taskCard(t, i, o) {
   const bell = t.due && t.remind !== 'none' ? '' : '';
   return '<div class="tcard rise' + (t.done ? ' isdone' : '') + '" style="--c:' + rgb + ';--i:' + i + '" data-card="' + t.id + '">' +
     '<button type="button" class="ck' + (t.done ? ' on' : '') + '" data-act="toggle" data-id="' + t.id + '" aria-label="' + (t.done ? 'Mark not done: ' : 'Mark done: ') + esc(t.title) + '">' + CHECK + '</button>' +
-    '<button type="button" class="tbody" data-act="open" data-id="' + t.id + '"><span class="tt">' + (t.prio && t.prio !== 'none' ? '<span class="pflag ' + t.prio + '">' + ic('flag', 13) + '</span>' : '') + esc(t.title) + '</span><span class="ts">' + esc(l.name) + rep + steps + bell + '</span></button>' + pill + '</div>';
+    '<button type="button" class="tbody" data-act="open" data-id="' + t.id + '"><span class="tt">' + (t.prio && t.prio !== 'none' ? '<span class="pflag ' + t.prio + '">' + ic('flag', 13) + '</span>' : '') + esc(t.title) + '</span><span class="ts">' + esc(l.name) + rep + steps + bell + '</span></button><span class="tend">' + pill + '<button type="button" class="tdel" data-act="del-task" data-id="' + t.id + '" aria-label="Delete ' + esc(t.title) + '">' + ic('trash', 18) + '</button></span></div>';
 }
 function empty(title, text, btn) {
   return '<div class="empty rise" style="--i:1"><div class="orb" aria-hidden="true"></div><h3>' + esc(title) + '</h3><p>' + esc(text) + '</p>' + (btn || '') + '</div>';
@@ -879,7 +963,7 @@ function routineCard(r, d, i) {
     return '<span class="wd' + (dd === d ? ' cur' : '') + (sch ? '' : ' off') + '"><small>' + w.charAt(0) + '</small><i class="' + (full ? 'on' : '') + '">' + (full ? CHECK : '') + '</i></span>';
   }).join('');
   return '<div class="rcard rise" style="--c:' + rgb + ';--i:' + i + '"><div class="rhead"><button type="button" class="rname" data-act="routine-edit" data-id="' + r.id + '"><b>' + esc(r.name) + '</b><span>' + (r.time ? fmtTime(r.time) + ' · ' : '') + k + '/' + n + ' done</span></button>' +
-    '<span class="pill">' + (k === n && n ? 'All done' : 'Routine') + '</span></div><div class="week">' + week + '</div>' +
+    '<span class="rend"><span class="pill">' + (k === n && n ? 'All done' : 'Routine') + '</span><button type="button" class="redit" data-act="routine-edit" data-id="' + r.id + '" aria-label="Edit ' + esc(r.name) + '">' + ic('pencil', 18) + '</button></span></div><div class="week">' + week + '</div>' +
     '<div class="rsteps">' + r.steps.map(s => { const on = log.includes(s.id); return '<button type="button" class="rstep' + (on ? ' on' : '') + '" data-act="rstep" data-id="' + r.id + '" data-s="' + s.id + '" data-d="' + d + '" aria-pressed="' + on + '"><span class="rbox">' + CHECK + '</span>' + esc(s.t) + '</button>'; }).join('') + '</div></div>';
 }
 function heroCard(t, over) {
@@ -902,7 +986,7 @@ function viewToday() {
   const nx = nextReminder(), st = streak(), dt = parseISO(d), f = V.filter;
   const hero = queue[0], rest = queue.slice(1);
   let i = 0;
-  let h = '<header class="top rise" style="--i:0"><div class="who"><button type="button" class="avatar" data-act="settings" aria-label="Settings and reminders">' + esc(initial()) + '</button><div class="wt"><b>' + esc(S.name || 'You') + '</b><small>' + WDL[dt.getDay()] + ', ' + dt.getDate() + ' ' + MONL[dt.getMonth()] + '</small></div></div>' +
+  let h = '<header class="top rise" style="--i:0"><div class="who"><button type="button" class="avatar" data-act="settings" aria-label="Settings and reminders">' + avatarIn() + '</button><div class="wt"><b>' + esc(S.name || 'You') + '</b><small>' + WDL[dt.getDay()] + ', ' + dt.getDate() + ' ' + MONL[dt.getMonth()] + '</small></div></div>' +
     '<div class="tools"><button type="button" class="round" data-tab="upcoming" aria-label="Upcoming tasks">' + ic('cal', 20) + '</button><button type="button" class="round" data-act="notifs" aria-label="Notifications">' + ic('bell', 20) + (V.notif !== 'granted' ? '<span class="dot"></span>' : '') + '</button></div></header>';
   h += '<h1 class="hi rise" style="--i:1">' + (x.isT ? '<b>Hi ' + esc(S.name || 'there') + ',</b> <span class="soft">' + greeting().toLowerCase() + '!</span>' : '<b>' + esc(relDay(d)) + ',</b> <span class="soft">' + x.pend.length + ' planned</span>') + '</h1>';
   h += '<div class="days rise" style="--i:2" role="group" aria-label="Pick a day">';
@@ -914,6 +998,7 @@ function viewToday() {
   const fc = (k, label, n) => '<button type="button" class="fchip' + (f === k ? ' on' : '') + '" data-act="filter" data-v="' + k + '" aria-pressed="' + (f === k) + '">' + label + ' <em>' + n + '</em></button>';
   h += '<div class="fchips rise" style="--i:3" role="group" aria-label="Filter">' + fc('all', 'All', queue.length + x.routines.length) + fc('tasks', 'Tasks', queue.length) + fc('routines', 'Routines', x.routines.length) + '</div>';
   if (hero && f !== 'routines') h += heroCard(hero, x.overdue.includes(hero));
+  if (f !== 'routines' && x.isT) h += wxCard() + stepsCard();
   if (f !== 'routines') h += '<section class="glass pcard rise" style="--i:4"><div class="ringwrap">' + ringSvg() + '<div class="pct">' + Math.round(p * 100) + '<small>%</small></div></div><div class="pinfo"><div class="pbig">' + done + ' of ' + total + ' done</div><div class="pmut">' +
     (nx ? 'Next · ' + esc(nx.title) + ' ' + (nx.at.toDateString() === new Date().toDateString() ? fmtClock(nx.at) : relDay(iso(nx.at)) + ' ' + fmtClock(nx.at)) : 'No reminders coming up') + '</div>' +
     (st >= 2 ? '<span class="streak">' + ic('flame', 14) + st + ' days slaying</span>' : '') + '</div></section>';
@@ -1042,6 +1127,7 @@ function openSheet(html, cls) {
 function closeSheet() {
   const r = $('#sheets'); if (!r.classList.contains('on')) return;
   r.classList.remove('show'); V.sheet = null;
+  setTimeout(() => { try { wxPaint(); } catch (e) {} }, 80);
   setTimeout(() => { if (!r.classList.contains('show')) { r.classList.remove('on'); r.innerHTML = ''; } }, 280);
   if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
 }
@@ -1136,6 +1222,7 @@ function tdChips(t) {
 function openSettings() {
   V.sheet = 'settings'; const st = S.settings;
   openSheet('<div class="shead"><h2>You and reminders</h2><button type="button" class="link" data-act="sheet-close">Done</button></div>' +
+    '<div class="pfrow"><div class="pfbig">' + avatarIn() + '</div><div class="pfbtns"><button type="button" class="btn ghost sm" data-act="s-photo">' + (S.photo ? 'Change photo' : 'Add photo') + '</button>' + (S.photo ? '<button type="button" class="btn plain sm" data-act="s-photo-rm">Remove</button>' : '') + '</div><input type="file" id="s-photo-in" accept="image/*" hidden></div>' +
     '<label class="vh" for="s-name">Your name</label><div class="fld full"><input id="s-name" type="text" value="' + esc(S.name) + '" placeholder="Your name" autocomplete="given-name"></div>' +
     profileBlock() + '<div class="lbl">Reminders</div><div class="panel" id="s-status"></div>' +
     '<div class="lbl">Notification sound</div>' + soundChips(st.sound, 's-sound', 'sound', false) +
@@ -1174,7 +1261,7 @@ function openRoutine(id) {
 }
 function rRefresh() {
   $('#r-days').innerHTML = '<div class="chips">' + WD.map((d, n) => '<button type="button" class="chip sm' + (RF.days.includes(n) ? ' on' : '') + '" data-act="r-day" data-v="' + n + '" aria-pressed="' + RF.days.includes(n) + '">' + d + '</button>').join('') + '</div>';
-  $('#r-steps').innerHTML = RF.steps.map(s => '<div class="step"><span class="bul"></span><span>' + esc(s.t) + '</span><button type="button" class="x" data-act="r-stepdel" data-s="' + s.id + '" aria-label="Remove step">' + ic('x', 14) + '</button></div>').join('') || '<p class="hint">Add the small steps, like "Drink water" or "Stretch".</p>';
+  $('#r-steps').innerHTML = RF.steps.map(s => '<div class="step"><span class="bul"></span><input type="text" class="stepin" data-sid="' + s.id + '" value="' + esc(s.t) + '" aria-label="Step name" autocomplete="off"><button type="button" class="x" data-act="r-stepdel" data-s="' + s.id + '" aria-label="Remove step">' + ic('x', 14) + '</button></div>').join('') || '<p class="hint">Add the small steps, like "Drink water" or "Stretch".</p>';
 }
 let LF = null;
 function openListSheet(id) {
@@ -1349,7 +1436,7 @@ function lockHtml() {
     '<div class="lform"><div class="ccrow"><div class="fld cc"><span class="lcc">' + esc(S.profile.cc) + '</span></div><div class="fld full grow"><input id="lk-phone" type="tel" inputmode="numeric" data-digits="12" placeholder="Your mobile number" aria-label="Mobile number"></div></div>' +
     FIELD_password('lk-pin', 'New 4-digit password') + FIELD_password('lk-pin2', 'Repeat new password') + '<div class="ferr" id="lk-err" role="alert"></div>' +
     '<button type="button" class="btn glow big" data-act="lock-reset">Save new password</button><button type="button" class="btn plain" data-act="lock-back">Back</button></div></div>';
-  return '<div class="lockin"><div class="lava">' + logoImg('llogo') + '</div><h2>Welcome back, ' + esc(S.name || 'there') + '</h2><p class="lsub">' + esc(maskPhone()) + '</p>' +
+  return '<div class="lockin"><div class="lava' + (S.photo ? ' ph' : '') + '">' + (S.photo ? '<img class="lphoto" src="' + S.photo + '" alt="">' : logoImg('llogo')) + '</div><h2>Welcome back, ' + esc(S.name || 'there') + '</h2><p class="lsub">' + esc(maskPhone()) + '</p>' +
     '<div class="dots" id="lk-dots" role="status" aria-label="password digits entered"><i></i><i></i><i></i><i></i></div><div class="lmsg" id="lk-msg" role="alert">Enter your password</div><div class="keypad">' + keys + '</div>' +
     '<button type="button" class="link lforgot" data-act="lock-forgot">Forgot password?</button></div>';
 }
@@ -1785,8 +1872,185 @@ async function autoAsk() {
   if (r === 'granted') { syncNow(); toast('Reminders are on'); } else if (r === 'denied') toast('Reminders are blocked. Allow them in phone Settings.');
 }
 
+
+/* profile photo */
+function photoFrom(file) {
+  if (!file || !/^image\//.test(file.type)) return;
+  const url = URL.createObjectURL(file), im = new Image();
+  im.onload = () => {
+    try {
+      const n = 256, c = document.createElement('canvas'); c.width = c.height = n;
+      const m = Math.min(im.width, im.height), sx = (im.width - m) / 2, sy = (im.height - m) / 2;
+      const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, n, n); x.drawImage(im, sx, sy, m, m, 0, 0, n, n);
+      S.photo = c.toDataURL('image/jpeg', .85); commit();
+      if (V.sheet === 'settings') { const b = $('.pfbig'); if (b) b.innerHTML = avatarIn(); const bt = $('[data-act="s-photo"]'); if (bt) bt.textContent = 'Change photo'; }
+      toast('Photo saved');
+    } catch (e) { toast('Could not use that photo'); }
+    URL.revokeObjectURL(url);
+  };
+  im.onerror = () => { toast('Could not open that photo'); URL.revokeObjectURL(url); };
+  im.src = url;
+}
+document.addEventListener('change', e => { if (e.target && e.target.id === 's-photo-in') { photoFrom(e.target.files && e.target.files[0]); e.target.value = ''; } });
+
+
+/* ---------- step counter (installed app) ---------- */
+const STEPS = { ok: false, granted: false, loaded: false, n: 0, log: {} };
+const stepsP = () => { const C = window.Capacitor; return C && C.isNativePlatform && C.isNativePlatform() ? (C.Plugins || {}).TicicSteps : null; };
+const stepGoal = () => S.stepGoal || 6000;
+const fmtN = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+function stepsCard() {
+  const head = (title, sub, extra) => '<section class="glass scard rise" id="stepcard" style="--i:4"><div class="shd"><span class="sico">' + ic('pulse', 20) + '</span><div><b>' + title + '</b><small>' + sub + '</small></div>' + (extra || '') + '</div></section>';
+  const nat = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+  if (!nat) return head('Steps', 'Step counting works in the installed app');
+  if (!stepsP()) return head('Steps', 'Not in this version yet. Update the app from GitHub');
+  if (!STEPS.loaded) return head('Steps', 'Checking your step sensor...');
+  if (!STEPS.ok) return head('Steps', 'This phone has no step sensor');
+  if (!STEPS.granted) return '<section class="glass scard rise" id="stepcard" style="--i:4"><div class="shd"><span class="sico">' + ic('pulse', 20) + '</span><div><b>Count your steps</b><small>Allow Physical activity to see your daily walk</small></div></div><button type="button" class="btn sm sbtn" data-act="st-on">Turn on step counting</button></section>';
+  const g = stepGoal(), n = STEPS.n, pct = Math.min(100, Math.round(n / g * 100));
+  const td = today(), days = []; for (let k = 6; k >= 0; k--) days.push(addDays(td, -k));
+  const L = S.stepLog || {}, mx = Math.max(g, ...days.map(d => L[d] || 0));
+  const bars = days.map(d => { const v = Math.max(L[d] || 0, d === td ? n : 0); return '<span class="wb' + (d === td ? ' now' : '') + '"><i style="height:' + Math.max(6, Math.round(v / mx * 100)) + '%"></i><em>' + WD[dow(d)].charAt(0) + '</em></span>'; }).join('');
+  return '<section class="glass scard rise" id="stepcard" data-act="st-hist" style="--i:4"><div class="shd"><span class="sico">' + ic('pulse', 20) + '</span><div><b>' + fmtN(n) + ' steps</b><small>' + (n >= g ? 'Goal reached. Great walk!' : fmtN(g - n) + ' more to reach ' + fmtN(g)) + '</small></div><button type="button" class="sgoal" data-act="st-goal" aria-label="Change step goal">Goal ' + fmtN(g) + '</button></div><div class="sbar" role="progressbar" aria-valuenow="' + pct + '" aria-valuemin="0" aria-valuemax="100"><i style="width:' + pct + '%"></i></div><div class="swk">' + bars + '</div><div class="shist">Tap to see your step history</div></section>';
+}
+
+function openStepHistory() {
+  V.sheet = 'steps'; const L = Object.assign({}, S.stepLog || {}), td = today(), g = stepGoal();
+  L[td] = Math.max(L[td] || 0, STEPS.n || 0);
+  const ds = Object.keys(L).sort().reverse().slice(0, 60), vals = ds.map(d => L[d]);
+  const week = ds.filter(d => d >= addDays(td, -6)), wsum = week.reduce((a, d) => a + L[d], 0);
+  const best = ds.reduce((b, d) => (L[d] > (L[b] || 0) ? d : b), ds[0]);
+  const mx = Math.max(g, ...vals, 1);
+  const lbl = d => d === td ? 'Today' : d === addDays(td, -1) ? 'Yesterday' : WDL[dow(d)].slice(0, 3) + ', ' + parseISO(d).getDate() + ' ' + MON[parseISO(d).getMonth()];
+  let h = '<div class="shead"><h2>Step history</h2><button type="button" class="link" data-act="sheet-close">Done</button></div>';
+  if (!ds.length) h += '<p class="hint">No records yet. Your steps are saved here every day once step counting is on.</p>';
+  else {
+    h += '<div class="hsum"><div><b>' + fmtN(week.length ? wsum / week.length : 0) + '</b><small>Daily average (7 days)</small></div><div><b>' + fmtN(L[best]) + '</b><small>Best day</small></div><div><b>' + fmtN(wsum) + '</b><small>This week</small></div></div><div class="hlist">';
+    ds.forEach(d => { const v = L[d]; h += '<div class="hrow"><span class="hd">' + esc(lbl(d)) + '</span><span class="hb"><i style="width:' + Math.max(2, Math.round(v / mx * 100)) + '%"></i></span><span class="hn">' + fmtN(v) + (v >= g ? ' ✓' : '') + '</span></div>'; });
+    h += '</div>';
+  }
+  openSheet(h, 'tall');
+}
+
+async function stepsRefresh() {
+  const p = stepsP(); if (!p) return;
+  try {
+    const st = await p.status(); STEPS.ok = !!st.available; STEPS.granted = !!st.granted; STEPS.loaded = true;
+    if (STEPS.ok && STEPS.granted) {
+      const r = await p.today(); STEPS.n = r.steps || 0; STEPS.log = r.log || {};
+      S.stepLog = S.stepLog || {}; let ch = false;
+      Object.keys(STEPS.log).forEach(d => { const v = Math.round(STEPS.log[d] || 0); if (v > (S.stepLog[d] || 0)) { S.stepLog[d] = v; ch = true; } });
+      const ks = Object.keys(S.stepLog).sort(); while (ks.length > 400) { delete S.stepLog[ks.shift()]; ch = true; }
+      if (ch) { save(); cloudPush(); }
+    }
+  } catch (e) { STEPS.ok = false; STEPS.loaded = true; }
+  const el = $('#stepcard');
+  if (V.view === 'today' && !V.sheet) { if (el) el.outerHTML = stepsCard(); else render(); }
+}
+
+
+/* ---------- weather (Open-Meteo, free, no key) ---------- */
+const WX = { data: null, at: 0, busy: false, err: false, results: [], q: '' };
+try { const c = JSON.parse(store.get('ticic.wx') || 'null'); if (c && c.data) { WX.data = c.data; WX.at = c.at; WX.key = c.key; } } catch (e) {}
+function wxKind(code, day) {
+  if (code === 0) return day === 0 ? ['wmoon', 'Clear night'] : ['wsun', 'Sunny'];
+  if (code <= 2) return ['wpart', 'Partly cloudy'];
+  if (code === 3) return ['wcloud', 'Cloudy'];
+  if (code === 45 || code === 48) return ['wfog', 'Foggy'];
+  if (code >= 51 && code <= 57) return ['wrain', 'Drizzle'];
+  if (code >= 61 && code <= 67) return ['wrain', 'Rain'];
+  if (code >= 71 && code <= 77) return ['wsnow', 'Snow'];
+  if (code >= 80 && code <= 82) return ['wrain', 'Showers'];
+  if (code === 85 || code === 86) return ['wsnow', 'Snow showers'];
+  if (code >= 95) return ['wstorm', 'Thunderstorm'];
+  return ['wcloud', 'Cloudy'];
+}
+const wxKey = () => S.place ? S.place.lat.toFixed(2) + ',' + S.place.lon.toFixed(2) : '';
+async function wxRefresh(force) {
+  if (!S.place || WX.busy) return;
+  if (!force && WX.data && WX.key === wxKey() && Date.now() - WX.at < 20 * 60000) return;
+  WX.busy = true;
+  try {
+    const u = 'https://api.open-meteo.com/v1/forecast?latitude=' + S.place.lat + '&longitude=' + S.place.lon + '&current=temperature_2m,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=5';
+    const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 12000);
+    const r = await fetch(u, { signal: ctl.signal }); clearTimeout(to);
+    if (!r.ok) throw new Error('http'); const d = await r.json();
+    if (!d.current || !d.daily) throw new Error('bad');
+    WX.data = d; WX.at = Date.now(); WX.key = wxKey(); WX.err = false;
+    store.set('ticic.wx', JSON.stringify({ data: d, at: WX.at, key: WX.key }));
+  } catch (e) { WX.err = true; }
+  WX.busy = false; wxPaint();
+}
+function wxPaint() {
+  const el = $('#wxcard'); if (V.view === 'today' && !V.sheet) { if (el) el.outerHTML = wxCard(); else if (S.place) render(); }
+  if (V.sheet === 'weather') { const b = $('#wx-forecast'); if (b) b.innerHTML = wxForecast(); }
+}
+function wxTip(d) {
+  const rain = d.daily.precipitation_probability_max[0] || 0, t = d.current.temperature_2m;
+  if (rain >= 50) return 'Rain is likely today. Carry an umbrella.';
+  if (t >= 35) return 'It is hot. Drink plenty of water.';
+  if (t <= 12) return 'It is cold. Wear something warm.';
+  return '';
+}
+function wxCard() {
+  const head = (a, b, c) => '<section class="glass wcard rise" id="wxcard" data-act="wx-open" style="--i:4">' + a + '</section>';
+  if (!S.place) return head('<span class="wico">' + ic('wcloud', 30) + '</span><div class="wmain"><b>Weather</b><small>Add your city to see today\'s weather</small></div><span class="wgo">Add</span>');
+  const d = WX.data && WX.key === wxKey() ? WX.data : null;
+  if (!d) return head('<span class="wico">' + ic('wcloud', 30) + '</span><div class="wmain"><b>' + esc(S.place.name) + '</b><small>' + (WX.err ? 'Weather is unavailable. Check your internet.' : 'Loading weather...') + '</small></div>');
+  const k = wxKind(d.current.weather_code, d.current.is_day), tip = wxTip(d);
+  const nx = [1, 2, 3].map(i => { const kk = wxKind(d.daily.weather_code[i], 1), dt = parseISO(d.daily.time[i]); return '<span class="wd3"><small>' + WD[dt.getDay()] + '</small>' + ic(kk[0], 20) + '<b>' + Math.round(d.daily.temperature_2m_max[i]) + '°</b></span>'; }).join('');
+  return head('<span class="wico">' + ic(k[0], 34) + '</span><div class="wmain"><b>' + Math.round(d.current.temperature_2m) + '°C</b><small>' + k[1] + ' · ' + esc(S.place.name) + '</small><em>High ' + Math.round(d.daily.temperature_2m_max[0]) + '° · Low ' + Math.round(d.daily.temperature_2m_min[0]) + '° · Rain ' + (d.daily.precipitation_probability_max[0] || 0) + '%</em></div><div class="wnext">' + nx + '</div>' + (tip ? '<div class="wtip">' + esc(tip) + '</div>' : ''));
+}
+function wxForecast() {
+  const d = WX.data && WX.key === wxKey() ? WX.data : null; if (!d) return '';
+  return '<div class="lbl">Next days</div><div class="hlist">' + d.daily.time.map((t, i) => { const kk = wxKind(d.daily.weather_code[i], 1), dt = parseISO(t); return '<div class="wrow"><span class="hd">' + (i === 0 ? 'Today' : WDL[dt.getDay()].slice(0, 3) + ', ' + dt.getDate() + ' ' + MON[dt.getMonth()]) + '</span><span class="wri">' + ic(kk[0], 20) + '<small>' + kk[1] + '</small></span><span class="hn">' + Math.round(d.daily.temperature_2m_max[i]) + '° / ' + Math.round(d.daily.temperature_2m_min[i]) + '°</span></div>'; }).join('') + '</div>';
+}
+function wxResults() {
+  if (!WX.results.length) return WX.q ? '<p class="hint">No place found. Try another spelling.</p>' : '';
+  return '<div class="hlist">' + WX.results.map((r, i) => '<button type="button" class="nrow" data-act="wx-pick" data-i="' + i + '"><span class="ni">' + ic('pin', 18) + '</span><span class="nt"><b>' + esc(r.name) + '</b><small>' + esc([r.admin1, r.country].filter(Boolean).join(', ')) + '</small></span></button>').join('') + '</div>';
+}
+function openWeather() {
+  V.sheet = 'weather'; WX.results = []; WX.q = '';
+  openSheet('<div class="shead"><h2>Weather</h2><button type="button" class="link" data-act="sheet-close">Done</button></div>' +
+    '<form data-form="wxsearch" class="addrow"><label class="vh" for="wx-q">Search your city</label><input id="wx-q" type="text" placeholder="Search your city" autocomplete="off" enterkeyhint="search"><button type="submit" class="btn sm">Search</button></form>' +
+    '<div class="btnrow"><button type="button" class="btn ghost sm" data-act="wx-here">Use my location</button>' + (S.place ? '<button type="button" class="btn plain sm" data-act="wx-rm">Remove</button>' : '') + '</div>' +
+    '<div id="wx-res"></div>' + (S.place ? '<div class="pst"><b>' + esc(S.place.name) + '</b><span>Weather by Open-Meteo</span></div>' : '') + '<div id="wx-forecast">' + wxForecast() + '</div>', 'tall');
+}
+async function wxSearch(q) {
+  q = (q || '').trim(); if (q.length < 2) return; WX.q = q;
+  const box = $('#wx-res'); if (box) box.innerHTML = '<p class="hint">Searching...</p>';
+  try {
+    const r = await fetch('https://geocoding-api.open-meteo.com/v1/search?count=6&language=en&name=' + encodeURIComponent(q)); const d = await r.json();
+    WX.results = d.results || [];
+  } catch (e) { WX.results = []; if (box) box.innerHTML = '<p class="hint">No internet. Try again.</p>'; return; }
+  if ($('#wx-res')) $('#wx-res').innerHTML = wxResults();
+}
+function wxSet(p) { S.place = p; save(); WX.data = null; cloudPush(); wxRefresh(true); if (V.sheet === 'weather') openWeather(); }
+
 /* ---------- actions ---------- */
 const ACT = {
+  'wx-open'() { openWeather(); },
+  'wx-pick'(el) { const r = WX.results[Number(el.dataset.i)]; if (r) { wxSet({ name: r.name, lat: r.latitude, lon: r.longitude }); toast('Weather set to ' + r.name); } },
+  'wx-rm'() { S.place = null; save(); WX.data = null; cloudPush(); closeSheet(); render(); },
+  'wx-here'() {
+    if (!navigator.geolocation) return toast('Location is not available here');
+    toast('Finding your location...');
+    navigator.geolocation.getCurrentPosition(p => { wxSet({ name: 'My location', lat: Math.round(p.coords.latitude * 100) / 100, lon: Math.round(p.coords.longitude * 100) / 100 }); toast('Weather updated'); }, () => toast('Location is blocked. Search your city instead.'), { timeout: 12000, maximumAge: 600000 });
+  },
+  'st-hist'() { openStepHistory(); },
+  async 'st-on'() { const p = stepsP(); if (!p) return; try { const r = await p.request(); STEPS.granted = !!r.granted; if (STEPS.granted) { await p.start(); toast('Step counting is on'); } else toast('Allow Physical activity in phone Settings'); } catch (e) {} stepsRefresh(); },
+  'st-goal'() { const g = [4000, 6000, 8000, 10000], n = g[(g.indexOf(stepGoal()) + 1) % g.length]; S.stepGoal = n; save(); const el = $('#stepcard'); if (el) el.outerHTML = stepsCard(); toast('Daily goal: ' + fmtN(n) + ' steps'); cloudPush(); },
+  's-photo'() { const i = $('#s-photo-in'); if (i) i.click(); },
+  's-photo-rm'() { S.photo = null; commit(); openSettings(); },
+  'del-task'(el) {
+    const t = taskById(el.dataset.id); if (!t || busy) return;
+    const card = el.closest('.tcard'); if (card) card.classList.add('leaving');
+    try { navigator.vibrate && navigator.vibrate(12); } catch (e) {}
+    setTimeout(() => {
+      const i = S.tasks.indexOf(t); if (i < 0) return; S.tasks.splice(i, 1); commit();
+      toast('Deleted: ' + t.title, () => { S.tasks.splice(Math.min(i, S.tasks.length), 0, t); commit(); });
+    }, 220);
+  },
   'c-done'() { if (!CALL) return; const t = taskById(CALL.item.taskId); try { navigator.vibrate && navigator.vibrate(20); } catch (e) {} if (t && !t.done) { completeTask(t, true); commit(); toast('Done: ' + t.title); } stopCall(); },
   'c-snooze'() { if (!CALL) return; const id = CALL.item.taskId; stopCall(); snooze(id); },
   'c-open'() { if (!CALL) return; const r = CALL.item.routineId; stopCall(); go('today'); if (r) setTimeout(() => openRoutine(r), 350); },
@@ -1919,7 +2183,7 @@ const ACT = {
   'r-stepdel'(el) { RF.steps = RF.steps.filter(s => s.id !== el.dataset.s); rRefresh(); },
   'r-save'() {
     const n = $('#r-name').value.trim(); if (!n) { shake('.fld.full'); return; }
-    RF.name = n; RF.time = $('#r-time').value || '07:00';
+    RF.name = n; RF.time = $('#r-time').value || '07:00'; RF.steps = RF.steps.filter(x => (x.t || '').trim()).map(x => ({ ...x, t: x.t.trim() }));
     const isNew = RF.isNew; delete RF.isNew;
     if (isNew) S.routines.push(RF); else { const i = S.routines.findIndex(r => r.id === RF.id); if (i >= 0) S.routines[i] = RF; }
     commit(); closeSheet(); toast('Saved ' + RF.name);
@@ -1956,7 +2220,8 @@ document.addEventListener('click', e => {
 });
 document.addEventListener('input', e => {
   if (e.target.dataset && e.target.dataset.digits) { const n = Number(e.target.dataset.digits), v = e.target.value.replace(/\D/g, '').slice(0, n); if (v !== e.target.value) e.target.value = v; return; }
-  if (e.target.id === 'qa-in' && QA) { QA.text = e.target.value; qaRefresh(); }
+  if (e.target.classList && e.target.classList.contains('stepin') && RF) { const st = RF.steps.find(x => x.id === e.target.dataset.sid); if (st) st.t = e.target.value; }
+  else if (e.target.id === 'qa-in' && QA) { QA.text = e.target.value; qaRefresh(); }
   else if (e.target.id === 'qa-note' && QA) QA.note = e.target.value;
 });
 document.addEventListener('change', e => {
@@ -1972,6 +2237,7 @@ document.addEventListener('submit', e => {
   const kind = f.dataset.form, inp = $('input[type=text]', f), val = inp ? inp.value.trim() : '';
   if (kind === 'qa') return qaSubmit();
   if (!val) return;
+  if (kind === 'wxsearch') return wxSearch(val);
   if (kind === 'listadd') {
     const p = parseQuick(val), due = p.due, tm = p.time;
     if (!p.title) return;
@@ -2095,16 +2361,23 @@ document.addEventListener('focusin', e => { if (e.target.closest && e.target.clo
 try { if (window.TicicInsets) { const a = window.TicicInsets.get().split(',').map(Number); window.__setInsets(a[0], a[1], a[2]); } } catch (e) {}
 
 /* ---------- boot ---------- */
+function runSplash(first) {
+  const sp = $('#splash'); if (!sp) return;
+  sp.innerHTML = '<div class="spl"><span class="sring"></span><span class="sring b"></span><span class="slogo">' + logoImg('') + '</span></div><div class="sname">Ticic</div><div class="stag">Never forget the little things</div><div class="sdots"><i></i><i></i><i></i></div>';
+  setTimeout(() => { sp.classList.add('out'); setTimeout(() => { sp.remove(); }, 600); }, first ? 2300 : 1500);
+}
 function boot() {
-  load(); V.day = today(); V.anim = true;
+  load(); V.day = today(); V.anim = true; runSplash(!S.onboarded);
   if (lockEnabled()) { showLock(true); BIO.check().then(ok => { if (ok && S.bioOn && $('#lock').classList.contains('on') && LOCK.mode === 'pad') { $('#lock').innerHTML = lockHtml(); setTimeout(lockBio, 300); } }); } else BIO.check();
   render();
   NAT.init(onNative); nativeChrome();
   CALLN.check().then(ok => { if (ok) { callPending(); syncNow(); } });
+  wxRefresh(); setInterval(() => { if (!document.hidden) wxRefresh(); }, 30 * 60000);
+  stepsRefresh(); setInterval(() => { if (!document.hidden && !V.sheet) stepsRefresh(); }, 60000);
   NAT.status().then(s => { NAT_state = V.notif = s; render(); if (s === 'granted') syncNow(); else setTimeout(autoAsk, 900); });
   if (!S.onboarded) openOnboarding(); else if (!S.profile && !S.noLogin) showProfileStep();
   tick(); setInterval(tick, 5000);
-  document.addEventListener('visibilitychange', () => { if (document.hidden) wentAway(); else { cameBack(); tick(); syncNow(); callPending(); } });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) wentAway(); else { cameBack(); tick(); syncNow(); callPending(); stepsRefresh(); wxRefresh(); } });
   window.__ticic = { S: () => S, tick, buildSchedule, parseQuick, commit, NAT, V, ACT, fired: () => fired };
 }
 boot();

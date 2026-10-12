@@ -28,7 +28,7 @@ jobs:
           python3 - <<'PY'
           p = 'android/app/src/main/AndroidManifest.xml'
           s = open(p).read()
-          perms = ''.join('<uses-permission android:name="android.permission.%s"%s/>\n' % (n, x) for n, x in [('POST_NOTIFICATIONS', ''), ('USE_EXACT_ALARM', ''), ('SCHEDULE_EXACT_ALARM', ' android:maxSdkVersion="32"'), ('VIBRATE', ''), ('RECEIVE_BOOT_COMPLETED', ''), ('USE_BIOMETRIC', ''), ('USE_FINGERPRINT', '')])
+          perms = ''.join('<uses-permission android:name="android.permission.%s"%s/>\n' % (n, x) for n, x in [('POST_NOTIFICATIONS', ''), ('USE_EXACT_ALARM', ''), ('SCHEDULE_EXACT_ALARM', ' android:maxSdkVersion="32"'), ('VIBRATE', ''), ('RECEIVE_BOOT_COMPLETED', ''), ('USE_BIOMETRIC', ''), ('USE_FINGERPRINT', ''), ('ACCESS_COARSE_LOCATION', ''), ('ACCESS_FINE_LOCATION', '')])
           s = s.replace('</manifest>', perms + '</manifest>')
           open(p, 'w').write(s)
           PY
@@ -434,6 +434,200 @@ jobs:
           open(p, 'w').write(s)
           PY
           touch /tmp/safe/call_added
+      - name: Step counter
+        continue-on-error: true
+        run: |
+          D=android/app/src/main/java/com/ticic/daily
+          mkdir -p /tmp/safe_call
+          cp $D/MainActivity.java /tmp/safe_call/MainActivity.java
+          cp android/app/src/main/AndroidManifest.xml /tmp/safe_call/AndroidManifest.xml
+          cat > $D/TicicStepsPlugin.java <<'JAVA'
+          package com.ticic.daily;
+
+          import android.Manifest;
+          import android.app.AlarmManager;
+          import android.app.PendingIntent;
+          import android.content.Context;
+          import android.content.Intent;
+          import android.content.SharedPreferences;
+          import android.content.pm.PackageManager;
+          import android.hardware.Sensor;
+          import android.hardware.SensorEvent;
+          import android.hardware.SensorEventListener;
+          import android.hardware.SensorManager;
+          import android.os.Build;
+          import android.os.Handler;
+          import android.os.Looper;
+          import com.getcapacitor.JSObject;
+          import com.getcapacitor.Plugin;
+          import com.getcapacitor.PluginCall;
+          import com.getcapacitor.PluginMethod;
+          import com.getcapacitor.annotation.CapacitorPlugin;
+          import com.getcapacitor.annotation.Permission;
+          import com.getcapacitor.annotation.PermissionCallback;
+          import java.text.SimpleDateFormat;
+          import java.util.ArrayList;
+          import java.util.Collections;
+          import java.util.Date;
+          import java.util.Locale;
+          import org.json.JSONArray;
+          import org.json.JSONObject;
+
+          @CapacitorPlugin(name = "TicicSteps", permissions = { @Permission(strings = { Manifest.permission.ACTIVITY_RECOGNITION }, alias = "act") })
+          public class TicicStepsPlugin extends Plugin {
+            static final String PREF = "ticic_steps";
+
+            static String day() {
+              return new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date());
+            }
+
+            static boolean granted(Context c) {
+              if (Build.VERSION.SDK_INT < 29) return true;
+              return c.checkSelfPermission(Manifest.permission.ACTIVITY_RECOGNITION) == PackageManager.PERMISSION_GRANTED;
+            }
+
+            static boolean hasSensor(Context c) {
+              SensorManager sm = (SensorManager) c.getSystemService(Context.SENSOR_SERVICE);
+              return sm != null && sm.getDefaultSensor(Sensor.TYPE_STEP_COUNTER) != null;
+            }
+
+            static synchronized void apply(Context c, long raw) {
+              SharedPreferences sp = c.getSharedPreferences(PREF, Context.MODE_PRIVATE);
+              long last = sp.getLong("last", -1);
+              long delta = last < 0 ? 0 : (raw >= last ? raw - last : raw);
+              try {
+                JSONObject log = new JSONObject(sp.getString("log", "{}"));
+                String d = day();
+                log.put(d, log.optLong(d, 0) + delta);
+                JSONArray names = log.names();
+                if (names != null && names.length() > 90) {
+                  ArrayList<String> keys = new ArrayList<String>();
+                  for (int i = 0; i < names.length(); i++) keys.add(names.getString(i));
+                  Collections.sort(keys);
+                  while (keys.size() > 90) { log.remove(keys.get(0)); keys.remove(0); }
+                }
+                sp.edit().putLong("last", raw).putString("log", log.toString()).apply();
+              } catch (Exception e) { }
+            }
+
+            static void snap(final Context c, final Runnable done) {
+              final SensorManager sm = (SensorManager) c.getSystemService(Context.SENSOR_SERVICE);
+              final Sensor s = sm == null ? null : sm.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
+              if (s == null || !granted(c)) { if (done != null) done.run(); return; }
+              final Handler h = new Handler(Looper.getMainLooper());
+              final boolean[] fin = new boolean[1];
+              final SensorEventListener l = new SensorEventListener() {
+                public void onSensorChanged(SensorEvent e) {
+                  if (fin[0]) return;
+                  fin[0] = true;
+                  sm.unregisterListener(this);
+                  h.removeCallbacksAndMessages(null);
+                  apply(c, (long) e.values[0]);
+                  if (done != null) done.run();
+                }
+                public void onAccuracyChanged(Sensor sensor, int accuracy) { }
+              };
+              sm.registerListener(l, s, SensorManager.SENSOR_DELAY_NORMAL, h);
+              h.postDelayed(new Runnable() {
+                public void run() {
+                  if (fin[0]) return;
+                  fin[0] = true;
+                  sm.unregisterListener(l);
+                  if (done != null) done.run();
+                }
+              }, 6000);
+            }
+
+            static void schedule(Context c) {
+              AlarmManager am = (AlarmManager) c.getSystemService(Context.ALARM_SERVICE);
+              Intent i = new Intent(c, StepsReceiver.class);
+              i.setAction("com.ticic.daily.SNAP");
+              PendingIntent pi = PendingIntent.getBroadcast(c, 91, i, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+              am.setInexactRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 3600000L, AlarmManager.INTERVAL_HOUR, pi);
+            }
+
+            void reply(PluginCall call) {
+              JSObject r = new JSObject();
+              SharedPreferences sp = getContext().getSharedPreferences(PREF, Context.MODE_PRIVATE);
+              String logs = sp.getString("log", "{}");
+              long today = 0;
+              try {
+                JSONObject log = new JSONObject(logs);
+                today = log.optLong(day(), 0);
+                r.put("log", new JSObject(logs));
+              } catch (Exception e) { }
+              r.put("steps", today);
+              call.resolve(r);
+            }
+
+            @PluginMethod
+            public void status(PluginCall call) {
+              JSObject r = new JSObject();
+              r.put("available", hasSensor(getContext()));
+              r.put("granted", granted(getContext()));
+              call.resolve(r);
+            }
+
+            @PluginMethod
+            public void request(PluginCall call) {
+              if (granted(getContext())) { schedule(getContext()); status(call); return; }
+              requestPermissionForAlias("act", call, "permDone");
+            }
+
+            @PermissionCallback
+            private void permDone(PluginCall call) {
+              if (granted(getContext())) { schedule(getContext()); snap(getContext(), null); }
+              status(call);
+            }
+
+            @PluginMethod
+            public void today(final PluginCall call) {
+              if (!granted(getContext())) { reply(call); return; }
+              snap(getContext(), new Runnable() {
+                public void run() { reply(call); }
+              });
+            }
+
+            @PluginMethod
+            public void start(PluginCall call) {
+              if (granted(getContext())) schedule(getContext());
+              call.resolve();
+            }
+          }
+          JAVA
+          cat > $D/StepsReceiver.java <<'JAVA'
+          package com.ticic.daily;
+
+          import android.content.BroadcastReceiver;
+          import android.content.Context;
+          import android.content.Intent;
+
+          public class StepsReceiver extends BroadcastReceiver {
+            @Override
+            public void onReceive(Context c, Intent in) {
+              String a = in.getAction();
+              if (a == null) return;
+              if (a.equals(Intent.ACTION_BOOT_COMPLETED) || a.equals(Intent.ACTION_MY_PACKAGE_REPLACED)) {
+                if (TicicStepsPlugin.granted(c)) TicicStepsPlugin.schedule(c);
+              }
+              final PendingResult pr = goAsync();
+              TicicStepsPlugin.snap(c, new Runnable() {
+                public void run() { pr.finish(); }
+              });
+            }
+          }
+          JAVA
+          python3 - <<'PY'
+          d = 'android/app/src/main/java/com/ticic/daily/MainActivity.java'
+          s = open(d).read()
+          s = s.replace('super.onCreate(savedInstanceState);', 'registerPlugin(TicicStepsPlugin.class);\n    super.onCreate(savedInstanceState);', 1)
+          open(d, 'w').write(s)
+          p = 'android/app/src/main/AndroidManifest.xml'
+          m = open(p).read()
+          m = m.replace('</manifest>', '<uses-permission android:name="android.permission.ACTIVITY_RECOGNITION"/>\n<uses-feature android:name="android.hardware.sensor.stepcounter" android:required="false"/>\n</manifest>')
+          m = m.replace('</application>', '<receiver android:name=".StepsReceiver" android:exported="true"><intent-filter><action android:name="android.intent.action.BOOT_COMPLETED"/><action android:name="android.intent.action.MY_PACKAGE_REPLACED"/></intent-filter></receiver>\n</application>')
+          open(p, 'w').write(m)
+          PY
       - name: App icon from your logo
         continue-on-error: true
         run: |
@@ -481,14 +675,23 @@ jobs:
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
-      - name: Build APK again without the call screen (only runs if the first build failed)
+      - name: Build again without the step counter (only runs if the first build failed)
+        id: nosteps
         if: steps.full.outcome == 'failure'
+        continue-on-error: true
+        run: |
+          D=android/app/src/main/java/com/ticic/daily
+          if [ -f /tmp/safe_call/MainActivity.java ]; then cp /tmp/safe_call/MainActivity.java $D/MainActivity.java; cp /tmp/safe_call/AndroidManifest.xml android/app/src/main/AndroidManifest.xml; fi
+          rm -f $D/TicicStepsPlugin.java $D/StepsReceiver.java
+          cd android
+          ./gradlew assembleDebug
+      - name: Build again without the call screen (only runs if both builds failed)
+        if: steps.nosteps.outcome == 'failure'
         run: |
           D=android/app/src/main/java/com/ticic/daily
           if [ -f /tmp/safe/MainActivity.java ]; then cp /tmp/safe/MainActivity.java $D/MainActivity.java; cp /tmp/safe/AndroidManifest.xml android/app/src/main/AndroidManifest.xml; fi
-          rm -f $D/TicicAlarmPlugin.java $D/AlarmReceiver.java
+          rm -f $D/TicicStepsPlugin.java $D/StepsReceiver.java $D/TicicAlarmPlugin.java $D/AlarmReceiver.java
           cd android
-          chmod +x gradlew
           ./gradlew assembleDebug
       - name: Rename APK
         run: cp android/app/build/outputs/apk/debug/app-debug.apk TicicOS.apk

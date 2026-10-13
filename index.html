@@ -543,6 +543,8 @@ textarea:focus{border-color:rgb(var(--blue))}
 .prow{display:grid;grid-template-columns:62px 1fr auto;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid rgba(11,42,91,.08);font-size:14.5px}
 .prow .pd{font-size:12px;font-weight:700;color:rgb(var(--blue))}
 .prow em{font-style:normal;font-size:12.5px;color:var(--mu)}
+.lite *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}.lite .glass{background:rgba(255,255,255,.92)!important}.lite .rise{animation-duration:.2s!important}
+.wk{display:flex;align-items:stretch;gap:8px}.wk .wb i{background:#BFD6FB}.wk .wb.now i{background:#0B5FD8}.wk .wb em{color:#5B6B8C}
 </style></head><body>
 <div class="blobs" aria-hidden="true"><i></i><i></i><i></i></div>
 <div id="app"><div id="warn"></div><main id="view"></main></div>
@@ -588,7 +590,9 @@ function relDay(d) {
 const COL = { pink: '255,150,205', violet: '120,150,255', cyan: '90,190,255', lime: '190,235,110', amber: '255,196,100', coral: '255,140,120' };
 const COLNAMES = Object.keys(COL);
 const REMINDS = [[0, 'At time'], [10, '10 min before'], [30, '30 min before'], [60, '1 hr before'], ['morning', 'Morning of'], ['none', 'No reminder']];
-const REPEATS = [['none', 'Never'], ['daily', 'Daily'], ['weekly', 'Weekly'], ['monthly', 'Monthly']];
+const REPEATS = [['none', 'Never'], ['daily', 'Daily'], ['weekdays', 'Weekdays'], ['weekly', 'Weekly'], ['monthly', 'Monthly']];
+const WDS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+function repLabel(r) { if (!r || r === 'none') return ''; if (r.indexOf('dow:') === 0) return 'every ' + r.slice(4).split(',').map(n => WDS[+n]).join(', '); return r; }
 
 /* ---------- state ---------- */
 /* Feedback: put an email address here to send feedback straight to your inbox. Empty = opens the phone share sheet. */
@@ -652,6 +656,8 @@ const soundOf = t => (t && t.sound && t.sound !== 'default') ? t.sound : (S.sett
 /* ---------- repeat helpers ---------- */
 function advance(d, rep) {
   if (rep === 'daily') return addDays(d, 1);
+  if (rep === 'weekdays') { let x = addDays(d, 1), g = 0; while ((dow(x) === 0 || dow(x) === 6) && g++ < 3) x = addDays(x, 1); return x; }
+  if (rep && rep.indexOf('dow:') === 0) { const set = rep.slice(4).split(',').map(Number); let x = addDays(d, 1), g = 0; while (!set.includes(dow(x)) && g++ < 8) x = addDays(x, 1); return x; }
   if (rep === 'weekly') return addDays(d, 7);
   if (rep === 'monthly') {
     const x = parseISO(d), day = x.getDate();
@@ -699,6 +705,11 @@ function parseQuick(raw) {
     const v = /^h/i.test(u) ? +n * 60 : +n; o.remind = v <= 0 ? 0 : v <= 10 ? 10 : v <= 30 ? 30 : 60; return ' ';
   });
   s = s.replace(/\s(?:an\s+)?hour\s+before(?=\s)/i, () => { o.remind = 60; return ' '; });
+  s = s.replace(/\s(?:every\s+)?(?:weekdays?|work\s?days?|monday\s+to\s+friday|mon\s*-\s*fri)(?=\s)/i, () => { o.repeat = 'weekdays'; return ' '; });
+  s = s.replace(/\severy\s+((?:(?:sun|mon|tue|wed|thu|fri|sat)[a-z]*(?:\s*,\s*|\s+and\s+|\s*&\s*|\s+)?){2,})(?=\s)/i, (x, w) => {
+    const ds = []; w.replace(/(sun|mon|tue|wed|thu|fri|sat)[a-z]*/gi, (y, k) => { const n = DOWMAP[k.toLowerCase()]; if (!ds.includes(n)) ds.push(n); return y; });
+    if (ds.length < 2) return x; ds.sort((a, b) => a - b); o.repeat = 'dow:' + ds.join(','); let d = addDays(td, 0), g = 0; while (!ds.includes(dow(d)) && g++ < 8) d = addDays(d, 1); o.due = d; return ' ';
+  });
   s = s.replace(/\s(?:every\s?day|daily|everyday)(?=\s)/i, () => { o.repeat = 'daily'; return ' '; });
   s = s.replace(/\severy\s+(sun|mon|tue|wed|thu|fri|sat)[a-z]*(?=\s)/i, (x, w) => { o.repeat = 'weekly'; o.due = nextDow(w); return ' '; });
   s = s.replace(/\s(?:weekly|every\s+week)(?=\s)/i, () => { o.repeat = 'weekly'; return ' '; });
@@ -741,7 +752,7 @@ function occurrences(t, fromDate, horizon) {
   if (!t.due) return [];
   if (!t.repeat || t.repeat === 'none') return [t.due];
   const out = []; let d = t.due, g = 0;
-  const cap = t.repeat === 'daily' ? 8 : t.repeat === 'weekly' ? 5 : 3;
+  const cap = (t.repeat === 'daily' || t.repeat === 'weekdays') ? 8 : (t.repeat === 'weekly' || String(t.repeat).indexOf('dow:') === 0) ? 6 : 3;
   while (g++ < 800 && out.length < cap && dayDiff(d, fromDate) <= horizon) { if (d >= fromDate) out.push(d); d = advance(d, t.repeat); }
   return out;
 }
@@ -936,7 +947,7 @@ function taskCard(t, i, o) {
   o = o || {};
   const l = listOf(t.list), rgb = rgbOf(t);
   const steps = t.steps && t.steps.length ? ' · ' + t.steps.filter(s => s.done).length + '/' + t.steps.length + ' steps' : '';
-  const rep = t.repeat && t.repeat !== 'none' ? ' · ' + t.repeat : '';
+  const rep = t.repeat && t.repeat !== 'none' ? ' · ' + repLabel(t.repeat) : '';
   let pill = '';
   if (o.overdue) pill = '<span class="pill warn">' + esc(relDay(t.due)) + '</span>';
   else if (t.time) pill = '<span class="pill">' + fmtTime(t.time) + '</span>';
@@ -969,7 +980,7 @@ function routineCard(r, d, i) {
 function heroCard(t, over) {
   const l = listOf(t.list);
   const steps = t.steps && t.steps.length ? t.steps.filter(s => s.done).length + ' of ' + t.steps.length + ' steps' : '';
-  const rep = t.repeat && t.repeat !== 'none' ? 'Repeats ' + t.repeat : '';
+  const rep = t.repeat && t.repeat !== 'none' ? 'Repeats ' + repLabel(t.repeat) : '';
   const pr = t.prio && t.prio !== 'none' ? t.prio : '';
   const sub = [over ? relDay(t.due) : (t.due ? relDay(t.due) : 'Anytime'), pr ? l.name : '', steps, rep].filter(Boolean).join(' · ');
   const cls = V.heroNew ? ' heroin' : ''; V.heroNew = false;
@@ -998,7 +1009,7 @@ function viewToday() {
   const fc = (k, label, n) => '<button type="button" class="fchip' + (f === k ? ' on' : '') + '" data-act="filter" data-v="' + k + '" aria-pressed="' + (f === k) + '">' + label + ' <em>' + n + '</em></button>';
   h += '<div class="fchips rise" style="--i:3" role="group" aria-label="Filter">' + fc('all', 'All', queue.length + x.routines.length) + fc('tasks', 'Tasks', queue.length) + fc('routines', 'Routines', x.routines.length) + '</div>';
   if (hero && f !== 'routines') h += heroCard(hero, x.overdue.includes(hero));
-  if (f !== 'routines' && x.isT) h += wxCard() + stepsCard();
+  if (f !== 'routines' && x.isT) h += wxCard() + stepsCard() + extraCards();
   if (f !== 'routines') h += '<section class="glass pcard rise" style="--i:4"><div class="ringwrap">' + ringSvg() + '<div class="pct">' + Math.round(p * 100) + '<small>%</small></div></div><div class="pinfo"><div class="pbig">' + done + ' of ' + total + ' done</div><div class="pmut">' +
     (nx ? 'Next · ' + esc(nx.title) + ' ' + (nx.at.toDateString() === new Date().toDateString() ? fmtClock(nx.at) : relDay(iso(nx.at)) + ' ' + fmtClock(nx.at)) : 'No reminders coming up') + '</div>' +
     (st >= 2 ? '<span class="streak">' + ic('flame', 14) + st + ' days slaying</span>' : '') + '</div></section>';
@@ -1022,7 +1033,7 @@ function viewToday() {
     if (V.showDone) {
       h += '<div class="stack">';
       x.doneT.forEach(t => { h += taskCard(t, 8 + i++); });
-      x.doneH.forEach(e => { h += '<div class="tcard isdone rise" style="--c:' + (COL[listOf(e.list).c] || COL.violet) + ';--i:' + (8 + i++) + '"><span class="ck on" aria-hidden="true">' + CHECK + '</span><span class="tbody"><span class="tt">' + esc(e.title) + '</span><span class="ts">Repeats · done ' + fmtTime(e.at.slice(11)) + '</span></span></div>'; });
+      x.doneH.forEach(e => { h += '<div class="tcard isdone rise" style="--c:' + (COL[listOf(e.list).c] || COL.violet) + ';--i:' + (8 + i++) + '"><span class="ck on" aria-hidden="true">' + CHECK + '</span><span class="tbody"><span class="tt">' + esc(e.title) + '</span><span class="ts">Repeats · done ' + (e.at ? fmtTime(e.at.slice(11)) : '') + '</span></span></div>'; });
       h += '</div>';
     }
   }
@@ -1227,7 +1238,7 @@ function openSettings() {
     profileBlock() + '<div class="lbl">Reminders</div><div class="panel" id="s-status"></div>' +
     '<div class="lbl">Notification sound</div>' + soundChips(st.sound, 's-sound', 'sound', false) +
     '<div class="lbl">Feedback</div><p class="hint">Tell us what works and what to improve.</p><div class="btnrow"><button type="button" class="btn ghost sm" data-act="s-feedback">Send feedback</button></div>' +
-    '<div class="lbl">Your data</div><p class="hint">Everything stays on this phone. Back it up before you uninstall.</p><div class="btnrow"><button type="button" class="btn ghost sm" data-act="s-export">Back up</button><button type="button" class="btn ghost sm" data-act="s-import">Restore</button><button type="button" class="btn ghost sm" data-act="s-examples">Add examples</button><button type="button" class="btn ghost sm danger" data-act="s-erase" id="s-erase">Erase all</button></div><div id="s-data"></div>', 'tall');
+    '<div class="lbl">Your data</div><p class="hint">Everything stays on this phone. Back it up before you uninstall.</p><div class="btnrow"><button type="button" class="btn ghost sm" data-act="s-export">Back up</button><button type="button" class="btn ghost sm" data-act="s-import">Restore</button><button type="button" class="btn ghost sm" data-act="s-examples">Add examples</button><button type="button" class="btn ghost sm" data-act="hl-open">Healthy reminders</button><button type="button" class="btn ghost sm" data-act="s-privacy">Privacy</button><button type="button" class="btn ghost sm danger" data-act="s-erase" id="s-erase">Erase all</button></div><div id="s-data"></div>', 'tall');
   settingsStatus();
 }
 async function settingsStatus() {
@@ -1695,7 +1706,19 @@ const PLAN_ACT = {
 
 /* main.js: actions, ticker, native hooks, boot */
 let syncT = 0, busy = false, lastRender = Date.now();
+const widgetP = () => { const C = window.Capacitor; return C && C.isNativePlatform && C.isNativePlatform() ? (C.Plugins || {}).TicicWidget : null; };
+let wgLast = '';
+function widgetPush() {
+  const p = widgetP(); if (!p) return;
+  try {
+    const td = today(), pend = S.tasks.filter(t => !t.done && t.due).sort((a, b) => (a.due + (a.time || '99:99')).localeCompare(b.due + (b.time || '99:99')));
+    const nx = pend.find(t => t.due >= td) || pend[0], left = pend.filter(t => t.due <= td).length;
+    const o = nx ? { title: nx.title, sub: (nx.due <= td ? (nx.due < td ? 'Overdue' : 'Today') : relDay(nx.due)) + (nx.time ? ' · ' + fmtTime(nx.time) : ''), left: left ? left + ' to do today' : 'All clear today' } : { title: '', sub: '', left: '' };
+    const k = JSON.stringify(o); if (k === wgLast) return; wgLast = k; p.update(o).catch(() => {});
+  } catch (e) {}
+}
 function syncNow() {
+  widgetPush();
   const items = buildSchedule(new Date());
   if (nativeCall()) {
     if (NAT_state !== 'granted') return Promise.resolve();
@@ -1710,8 +1733,55 @@ function commit() {
 }
 const num = v => (v !== '' && !isNaN(Number(v)) ? Number(v) : v);
 
+/* ---------- extra cards: week, health, backup, tips ---------- */
+const wcardHtml = (act, ico, b, sm, go, extra) => '<section class="glass wcard rise" ' + (act ? 'data-act="' + act + '" ' : '') + 'style="--i:4"><span class="wico">' + ic(ico, 28) + '</span><div class="wmain"><b>' + b + '</b><small>' + sm + '</small></div>' + (go || '') + '</section>';
+function weekStats(off) {
+  const td = today(), start = addDays(td, -((dow(td) + 6) % 7) - 7 * (off || 0)), days = [];
+  for (let k = 0; k < 7; k++) { const d = addDays(start, k); days.push({ d, n: d > td ? 0 : doneCountOn(d) }); }
+  return { days, total: days.reduce((a, x) => a + x.n, 0) };
+}
+function bestStreak() {
+  const set = new Set(); S.history.forEach(h => set.add(h.date)); S.tasks.forEach(t => { if (t.done && t.doneAt) set.add(t.doneAt.slice(0, 10)); });
+  const ds = [...set].sort(); let best = 0, run = 0, prev = null;
+  ds.forEach(d => { run = prev && addDays(prev, 1) === d ? run + 1 : 1; if (run > best) best = run; prev = d; });
+  return best;
+}
+function extraCards() {
+  let h = '';
+  const w = weekStats(0), pw = weekStats(1);
+  if (w.total + pw.total > 0) h += wcardHtml('wk-open', 'pulse', w.total + ' done this week', pw.total ? (w.total >= pw.total ? 'Up from ' : 'Last week: ') + pw.total + ' last week. Tap for details' : 'Tap for your weekly summary', '<span class="wgo">View</span>');
+  const td = Date.now(), last = S.lastBackup || S.firstRun || td;
+  if (!cloudOn() && S.tasks.length >= 3 && td - last > 7 * 864e5) h += wcardHtml('bk-now', 'shield' in IC ? 'shield' : 'bell', 'Back up your tasks', 'Copy a backup so you never lose them', '<span class="wgo">Copy</span>');
+  if (!S.hlHide && !S.tasks.some(t => t.list === 'health' && /water|medicine|pill|tablet/i.test(t.title))) h += wcardHtml('hl-open', 'heart', 'Water and medicine', 'Add healthy reminders in one tap', '<span class="wgo">Add</span>');
+  if (!S.tipsHide && S.tasks.length < 6) h += wcardHtml('tips-hide', 'bell', 'Quick tips', 'Type like you talk: "Pay rent every month 5pm". Drag the blue card to finish. Tap the bell for reminders. Tap here to hide.');
+  return h;
+}
+function openWeek() {
+  V.sheet = 'week'; const w = weekStats(0), pw = weekStats(1), mx = Math.max(1, ...w.days.map(x => x.n)), td = today();
+  const best = w.days.reduce((a, x) => x.n > a.n ? x : a, { n: 0 });
+  const bars = '<div class="wk" style="height:110px;margin:14px 0 8px">' + w.days.map(x => '<span class="wb' + (x.d === td ? ' now' : '') + '"><i style="height:' + Math.max(6, Math.round(x.n / mx * 100)) + '%"></i><em>' + WD[dow(x.d)].charAt(0) + '</em></span>').join('') + '</div>';
+  openSheet('<div class="shead"><h2>Your week</h2><button type="button" class="link" data-act="sheet-close">Done</button></div>' + bars +
+    '<div class="hsum"><div><b>' + w.total + '</b><small>Done this week</small></div><div><b>' + streak() + '</b><small>Day streak</small></div><div><b>' + bestStreak() + '</b><small>Best streak</small></div></div>' +
+    '<div class="panel"><p class="hint" style="margin:0">' + (w.total === 0 ? 'Finish a task today to start your week.' : (best.n ? 'Your best day was ' + WDL[dow(best.d)] + ' with ' + best.n + '. ' : '') + (pw.total ? (w.total >= pw.total ? 'That is ' + (w.total - pw.total) + ' more than last week. Keep going!' : 'Last week you finished ' + pw.total + '. You can beat it.') : 'Nice start.')) + '</p></div>', 'tall');
+}
+const HL = { water: { title: 'Drink a glass of water', times: ['09:00', '11:00', '13:00', '15:00', '17:00', '19:00'] }, med: { title: 'Take your medicine', time: '09:00' }, vit: { title: 'Take your vitamins', time: '08:00' } };
+function openHealth() {
+  V.sheet = 'health';
+  openSheet('<div class="shead"><h2>Healthy reminders</h2><button type="button" class="link" data-act="sheet-close">Done</button></div><p class="hint">One tap adds a daily reminder you can edit later.</p>' +
+    '<div class="panel"><div class="orow"><span style="flex:1 1 140px">Water, 6 times a day<br><small>9 am to 7 pm, every 2 hours</small></span><button type="button" class="btn ghost sm" data-act="hl-add" data-k="water">Add</button></div></div>' +
+    '<div class="panel"><div class="orow"><span style="flex:1 1 90px">Medicine</span><input id="hl-med" type="time" value="09:00" aria-label="Medicine time"><button type="button" class="btn ghost sm" data-act="hl-add" data-k="med">Add</button></div></div>' +
+    '<div class="panel"><div class="orow"><span style="flex:1 1 90px">Vitamins</span><input id="hl-vit" type="time" value="08:00" aria-label="Vitamin time"><button type="button" class="btn ghost sm" data-act="hl-add" data-k="vit">Add</button></div></div>' +
+    '<button type="button" class="btn plain sm" data-act="hl-hide">Do not show this on Today</button>', 'tall');
+}
+function hlMk(title, time) {
+  const due = time > pad(new Date().getHours()) + ':' + pad(new Date().getMinutes()) ? today() : addDays(today(), 1);
+  S.tasks.push({ id: uid(), title, note: '', due, time, remind: 0, repeat: 'daily', prio: 'none', sound: 'default', nudge: true, list: 'health', steps: [], done: false, created: Date.now() + S.tasks.length });
+}
+
 /* ---------- completion ---------- */
+const buzz = p => { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} };
 function completeTask(t, quiet) {
+  buzz([12, 40, 18]);
   const before = JSON.stringify(t), hl = S.history.length;
   t.snoozeUntil = null;
   if (t.repeat && t.repeat !== 'none') {
@@ -2064,6 +2134,18 @@ function wxSet(p) { S.place = p; save(); WX.data = null; cloudPush(); wxRefresh(
 
 /* ---------- actions ---------- */
 const ACT = {
+  'wk-open'() { openWeek(); },
+  'hl-open'() { openHealth(); },
+  'hl-hide'() { S.hlHide = 1; save(); closeSheet(); render(); },
+  'hl-add'(el) {
+    const k = el.dataset.k;
+    if (k === 'water') HL.water.times.forEach(t => hlMk(HL.water.title, t));
+    else { const i = $(k === 'med' ? '#hl-med' : '#hl-vit'); hlMk(HL[k].title, (i && i.value) || HL[k].time); }
+    commit(); el.textContent = 'Added'; el.disabled = true; buzz(15); toast('Reminder added');
+  },
+  'bk-now'() { const t = JSON.stringify(S); copyText(t, document.createElement('textarea')).then(ok => { S.lastBackup = Date.now(); save(); toast(ok ? 'Backup copied. Paste it in a note to yourself.' : 'Open Settings, then Back up, to copy it'); render(); }); },
+  'tips-hide'() { S.tipsHide = 1; save(); render(); },
+  's-privacy'() { $('#s-data').innerHTML = '<div class="panel"><p class="hint" style="margin:0"><b>Your privacy</b><br>Your tasks stay on this phone. If you turn on online login, a copy is saved in your own online account so you can restore it on a new phone.<br><br>Weather uses your approximate city, found from GPS or your internet connection, and only the city position is sent to the weather service. Steps are counted on this phone and never uploaded. We do not show ads or sell your data.</p></div>'; },
   'wx-open'() { const had = !!S.place; openWeather(); if (!had) wxLocate(false); },
   'wx-pick'(el) { const r = WX.results[Number(el.dataset.i)]; if (r) { wxSet({ name: r.name, lat: r.latitude, lon: r.longitude }); toast('Weather set to ' + r.name); } },
   'wx-rm'() { S.place = null; save(); WX.data = null; cloudPush(); closeSheet(); render(); },
@@ -2197,7 +2279,7 @@ const ACT = {
   's-set'(el) { S.settings[el.dataset.f] = Number(el.dataset.v); chipSelect(el); commit(); },
   async 's-export'() {
     const d = $('#s-data'); d.innerHTML = '<p class="hint">Copy this text and keep it somewhere safe, like a note to yourself.</p><textarea id="s-json" rows="5" readonly></textarea><button type="button" class="btn ghost sm" data-act="s-copy">Copy again</button>';
-    const ta = $('#s-json'); ta.value = JSON.stringify(S); toast((await copyText(ta.value, ta)) ? 'Copied backup' : 'Select the text and copy it');
+    S.lastBackup = Date.now(); save(); const ta = $('#s-json'); ta.value = JSON.stringify(S); toast((await copyText(ta.value, ta)) ? 'Copied backup' : 'Select the text and copy it');
   },
   async 's-copy'() { const ta = $('#s-json'); toast((await copyText(ta.value, ta)) ? 'Copied' : 'Select the text and copy it'); },
   's-import'() { $('#s-data').innerHTML = '<p class="hint">Paste a backup you copied earlier. This replaces what is on this phone.</p><textarea id="s-json" rows="5" placeholder="Paste backup here"></textarea><button type="button" class="btn glow sm" data-act="s-restore">Restore</button>'; $('#s-json').focus(); },
@@ -2398,9 +2480,10 @@ function runSplash(first) {
   setTimeout(() => { sp.classList.add('out'); setTimeout(() => { sp.remove(); }, 600); }, first ? 2300 : 1500);
 }
 function boot() {
-  load(); V.day = today(); V.anim = true; runSplash(!S.onboarded);
+  load(); if (!S.firstRun) { S.firstRun = Date.now(); } V.day = today(); V.anim = true; runSplash(!S.onboarded);
   if (lockEnabled()) { showLock(true); BIO.check().then(ok => { if (ok && S.bioOn && $('#lock').classList.contains('on') && LOCK.mode === 'pad') { $('#lock').innerHTML = lockHtml(); setTimeout(lockBio, 300); } }); } else BIO.check();
   render();
+  try { if ((navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4) || (navigator.deviceMemory && navigator.deviceMemory <= 3)) document.documentElement.classList.add('lite'); } catch (e) {}
   NAT.init(onNative); nativeChrome();
   CALLN.check().then(ok => { if (ok) { callPending(); syncNow(); } });
   const wxAutoT = setInterval(() => { if (S.place || S.wxAuto) return clearInterval(wxAutoT); if (S.onboarded && !document.hidden && !V.sheet) { S.wxAuto = 1; save(); clearInterval(wxAutoT); wxLocate(true); } }, 3000);

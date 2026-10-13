@@ -1009,7 +1009,7 @@ function viewToday() {
   const fc = (k, label, n) => '<button type="button" class="fchip' + (f === k ? ' on' : '') + '" data-act="filter" data-v="' + k + '" aria-pressed="' + (f === k) + '">' + label + ' <em>' + n + '</em></button>';
   h += '<div class="fchips rise" style="--i:3" role="group" aria-label="Filter">' + fc('all', 'All', queue.length + x.routines.length) + fc('tasks', 'Tasks', queue.length) + fc('routines', 'Routines', x.routines.length) + '</div>';
   if (hero && f !== 'routines') h += heroCard(hero, x.overdue.includes(hero));
-  if (f !== 'routines' && x.isT) h += wxCard() + stepsCard() + extraCards();
+  if (f !== 'routines' && x.isT) h += stepsCard() + extraCards();
   if (f !== 'routines') h += '<section class="glass pcard rise" style="--i:4"><div class="ringwrap">' + ringSvg() + '<div class="pct">' + Math.round(p * 100) + '<small>%</small></div></div><div class="pinfo"><div class="pbig">' + done + ' of ' + total + ' done</div><div class="pmut">' +
     (nx ? 'Next · ' + esc(nx.title) + ' ' + (nx.at.toDateString() === new Date().toDateString() ? fmtClock(nx.at) : relDay(iso(nx.at)) + ' ' + fmtClock(nx.at)) : 'No reminders coming up') + '</div>' +
     (st >= 2 ? '<span class="streak">' + ic('flame', 14) + st + ' days slaying</span>' : '') + '</div></section>';
@@ -1138,7 +1138,6 @@ function openSheet(html, cls) {
 function closeSheet() {
   const r = $('#sheets'); if (!r.classList.contains('on')) return;
   r.classList.remove('show'); V.sheet = null;
-  setTimeout(() => { try { wxPaint(); } catch (e) {} }, 80);
   setTimeout(() => { if (!r.classList.contains('show')) { r.classList.remove('on'); r.innerHTML = ''; } }, 280);
   if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
 }
@@ -2145,7 +2144,7 @@ const ACT = {
   },
   'bk-now'() { const t = JSON.stringify(S); copyText(t, document.createElement('textarea')).then(ok => { S.lastBackup = Date.now(); save(); toast(ok ? 'Backup copied. Paste it in a note to yourself.' : 'Open Settings, then Back up, to copy it'); render(); }); },
   'tips-hide'() { S.tipsHide = 1; save(); render(); },
-  's-privacy'() { $('#s-data').innerHTML = '<div class="panel"><p class="hint" style="margin:0"><b>Your privacy</b><br>Your tasks stay on this phone. If you turn on online login, a copy is saved in your own online account so you can restore it on a new phone.<br><br>Weather uses your approximate city, found from GPS or your internet connection, and only the city position is sent to the weather service. Steps are counted on this phone and never uploaded. We do not show ads or sell your data.</p></div>'; },
+  's-privacy'() { $('#s-data').innerHTML = '<div class="panel"><p class="hint" style="margin:0"><b>Your privacy</b><br>Your tasks stay on this phone. If you turn on online login, a copy is saved in your own online account so you can restore it on a new phone.<br><br>Steps are counted on this phone and never uploaded. We do not show ads or sell your data.</p></div>'; },
   'wx-open'() { const had = !!S.place; openWeather(); if (!had) wxLocate(false); },
   'wx-pick'(el) { const r = WX.results[Number(el.dataset.i)]; if (r) { wxSet({ name: r.name, lat: r.latitude, lon: r.longitude }); toast('Weather set to ' + r.name); } },
   'wx-rm'() { S.place = null; save(); WX.data = null; cloudPush(); closeSheet(); render(); },
@@ -2486,13 +2485,11 @@ function boot() {
   try { if ((navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4) || (navigator.deviceMemory && navigator.deviceMemory <= 3)) document.documentElement.classList.add('lite'); } catch (e) {}
   NAT.init(onNative); nativeChrome();
   CALLN.check().then(ok => { if (ok) { callPending(); syncNow(); } });
-  const wxAutoT = setInterval(() => { if (S.place || S.wxAuto) return clearInterval(wxAutoT); if (S.onboarded && !document.hidden && !V.sheet) { S.wxAuto = 1; save(); clearInterval(wxAutoT); wxLocate(true); } }, 3000);
-  wxRefresh(); setInterval(() => { if (!document.hidden) wxRefresh(); }, 30 * 60000);
   stepsRefresh(); setInterval(() => { if (!document.hidden && !V.sheet) stepsRefresh(); }, 60000);
   NAT.status().then(s => { NAT_state = V.notif = s; render(); if (s === 'granted') syncNow(); else setTimeout(autoAsk, 900); });
   if (!S.onboarded) openOnboarding(); else if (!S.profile && !S.noLogin) showProfileStep();
   tick(); setInterval(tick, 5000);
-  document.addEventListener('visibilitychange', () => { if (document.hidden) wentAway(); else { cameBack(); tick(); syncNow(); callPending(); stepsRefresh(); wxRefresh(); } });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) wentAway(); else { cameBack(); tick(); syncNow(); callPending(); stepsRefresh(); } });
   window.__ticic = { S: () => S, tick, buildSchedule, parseQuick, commit, NAT, V, ACT, fired: () => fired };
 }
 boot();

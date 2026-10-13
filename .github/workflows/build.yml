@@ -628,6 +628,166 @@ jobs:
           m = m.replace('</application>', '<receiver android:name=".StepsReceiver" android:exported="true"><intent-filter><action android:name="android.intent.action.BOOT_COMPLETED"/><action android:name="android.intent.action.MY_PACKAGE_REPLACED"/></intent-filter></receiver>\n</application>')
           open(p, 'w').write(m)
           PY
+      - name: Home screen widget
+        continue-on-error: true
+        run: |
+          D=android/app/src/main/java/com/ticic/daily
+          R=android/app/src/main/res
+          mkdir -p /tmp/safe_steps
+          cp $D/MainActivity.java /tmp/safe_steps/MainActivity.java
+          cp android/app/src/main/AndroidManifest.xml /tmp/safe_steps/AndroidManifest.xml
+          mkdir -p $R/layout $R/drawable $R/xml
+          cat > $D/TicicWidget.java <<'JAVA'
+          package com.ticic.daily;
+
+          import android.app.PendingIntent;
+          import android.appwidget.AppWidgetManager;
+          import android.appwidget.AppWidgetProvider;
+          import android.content.ComponentName;
+          import android.content.Context;
+          import android.content.Intent;
+          import android.content.SharedPreferences;
+          import android.widget.RemoteViews;
+
+          public class TicicWidget extends AppWidgetProvider {
+            @Override
+            public void onUpdate(Context c, AppWidgetManager m, int[] ids) {
+              for (int i = 0; i < ids.length; i++) {
+                m.updateAppWidget(ids[i], build(c));
+              }
+            }
+
+            static int rid(Context c, String type, String name) {
+              return c.getResources().getIdentifier(name, type, c.getPackageName());
+            }
+
+            static RemoteViews build(Context c) {
+              SharedPreferences p = c.getSharedPreferences("ticic_widget", Context.MODE_PRIVATE);
+              RemoteViews v = new RemoteViews(c.getPackageName(), rid(c, "layout", "ticic_widget"));
+              String title = p.getString("title", "");
+              String sub = p.getString("sub", "");
+              if (title.length() == 0) {
+                title = "Nothing planned";
+                sub = "Tap to add a task";
+              }
+              v.setTextViewText(rid(c, "id", "tw_title"), title);
+              v.setTextViewText(rid(c, "id", "tw_sub"), sub);
+              v.setTextViewText(rid(c, "id", "tw_left"), p.getString("left", ""));
+              Intent launch = c.getPackageManager().getLaunchIntentForPackage(c.getPackageName());
+              if (launch != null) {
+                PendingIntent pi = PendingIntent.getActivity(c, 7, launch, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+                v.setOnClickPendingIntent(rid(c, "id", "tw_root"), pi);
+              }
+              return v;
+            }
+
+            static void refresh(Context c) {
+              AppWidgetManager m = AppWidgetManager.getInstance(c);
+              int[] ids = m.getAppWidgetIds(new ComponentName(c, TicicWidget.class));
+              for (int i = 0; i < ids.length; i++) {
+                m.updateAppWidget(ids[i], build(c));
+              }
+            }
+          }
+          JAVA
+          cat > $D/TicicWidgetPlugin.java <<'JAVA'
+          package com.ticic.daily;
+
+          import android.content.Context;
+          import android.content.SharedPreferences;
+          import com.getcapacitor.Plugin;
+          import com.getcapacitor.PluginCall;
+          import com.getcapacitor.PluginMethod;
+          import com.getcapacitor.annotation.CapacitorPlugin;
+
+          @CapacitorPlugin(name = "TicicWidget")
+          public class TicicWidgetPlugin extends Plugin {
+            @PluginMethod
+            public void update(PluginCall call) {
+              Context c = getContext();
+              SharedPreferences.Editor e = c.getSharedPreferences("ticic_widget", Context.MODE_PRIVATE).edit();
+              e.putString("title", call.getString("title", ""));
+              e.putString("sub", call.getString("sub", ""));
+              e.putString("left", call.getString("left", ""));
+              e.apply();
+              TicicWidget.refresh(c);
+              call.resolve();
+            }
+          }
+          JAVA
+          cat > $R/layout/ticic_widget.xml <<'XML'
+          <?xml version="1.0" encoding="utf-8"?>
+          <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:id="@+id/tw_root"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:orientation="vertical"
+              android:padding="16dp"
+              android:gravity="center_vertical"
+              android:background="@drawable/ticic_widget_bg">
+              <TextView
+                  android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:text="NEXT UP"
+                  android:textColor="#B9D4FF"
+                  android:textSize="11sp"
+                  android:textStyle="bold" />
+              <TextView
+                  android:id="@+id/tw_title"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:layout_marginTop="4dp"
+                  android:maxLines="2"
+                  android:ellipsize="end"
+                  android:textColor="#FFFFFF"
+                  android:textSize="19sp"
+                  android:textStyle="bold" />
+              <TextView
+                  android:id="@+id/tw_sub"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:layout_marginTop="2dp"
+                  android:maxLines="1"
+                  android:ellipsize="end"
+                  android:textColor="#DCE9FF"
+                  android:textSize="13sp" />
+              <TextView
+                  android:id="@+id/tw_left"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:layout_marginTop="8dp"
+                  android:maxLines="1"
+                  android:textColor="#B9D4FF"
+                  android:textSize="12sp" />
+          </LinearLayout>
+          XML
+          cat > $R/drawable/ticic_widget_bg.xml <<'XML'
+          <?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+              <gradient android:startColor="#1F6FEB" android:endColor="#0A3FA8" android:angle="315" />
+              <corners android:radius="24dp" />
+          </shape>
+          XML
+          cat > $R/xml/ticic_widget_info.xml <<'XML'
+          <?xml version="1.0" encoding="utf-8"?>
+          <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+              android:minWidth="250dp"
+              android:minHeight="110dp"
+              android:updatePeriodMillis="1800000"
+              android:initialLayout="@layout/ticic_widget"
+              android:resizeMode="horizontal|vertical"
+              android:widgetCategory="home_screen" />
+          XML
+          python3 - <<'PY'
+          d = 'android/app/src/main/java/com/ticic/daily/MainActivity.java'
+          s = open(d).read()
+          s = s.replace('super.onCreate(savedInstanceState);', 'registerPlugin(TicicWidgetPlugin.class);\n    super.onCreate(savedInstanceState);', 1)
+          open(d, 'w').write(s)
+          p = 'android/app/src/main/AndroidManifest.xml'
+          m = open(p).read()
+          m = m.replace('</application>', '<receiver android:name=".TicicWidget" android:exported="true"><intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE"/></intent-filter><meta-data android:name="android.appwidget.provider" android:resource="@xml/ticic_widget_info"/></receiver>\n</application>')
+          open(p, 'w').write(m)
+          PY
       - name: App icon from your logo
         continue-on-error: true
         run: |
@@ -671,28 +831,61 @@ jobs:
       - name: Build APK
         id: full
         continue-on-error: true
+        shell: bash
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug
-      - name: Build again without the step counter (only runs if the first build failed)
-        id: nosteps
+          ./gradlew assembleDebug 2>&1 | tee /tmp/build_full.log
+      - name: Build again without the widget (only runs if the first build failed)
+        id: nowidget
         if: steps.full.outcome == 'failure'
         continue-on-error: true
+        shell: bash
+        run: |
+          D=android/app/src/main/java/com/ticic/daily
+          if [ -f /tmp/safe_steps/MainActivity.java ]; then cp /tmp/safe_steps/MainActivity.java $D/MainActivity.java; cp /tmp/safe_steps/AndroidManifest.xml android/app/src/main/AndroidManifest.xml; fi
+          rm -f $D/TicicWidget.java $D/TicicWidgetPlugin.java
+          cd android
+          ./gradlew assembleDebug 2>&1 | tee /tmp/build_nowidget.log
+      - name: Build again without the step counter (only runs if the last build failed)
+        id: nosteps
+        if: steps.nowidget.outcome == 'failure'
+        continue-on-error: true
+        shell: bash
         run: |
           D=android/app/src/main/java/com/ticic/daily
           if [ -f /tmp/safe_call/MainActivity.java ]; then cp /tmp/safe_call/MainActivity.java $D/MainActivity.java; cp /tmp/safe_call/AndroidManifest.xml android/app/src/main/AndroidManifest.xml; fi
-          rm -f $D/TicicStepsPlugin.java $D/StepsReceiver.java
+          rm -f $D/TicicStepsPlugin.java $D/StepsReceiver.java $D/TicicWidget.java $D/TicicWidgetPlugin.java
           cd android
-          ./gradlew assembleDebug
-      - name: Build again without the call screen (only runs if both builds failed)
+          ./gradlew assembleDebug 2>&1 | tee /tmp/build_nosteps.log
+      - name: Build again without the call screen (only runs if the last build failed)
+        id: nocall
         if: steps.nosteps.outcome == 'failure'
+        shell: bash
         run: |
           D=android/app/src/main/java/com/ticic/daily
           if [ -f /tmp/safe/MainActivity.java ]; then cp /tmp/safe/MainActivity.java $D/MainActivity.java; cp /tmp/safe/AndroidManifest.xml android/app/src/main/AndroidManifest.xml; fi
-          rm -f $D/TicicStepsPlugin.java $D/StepsReceiver.java $D/TicicAlarmPlugin.java $D/AlarmReceiver.java
+          rm -f $D/TicicStepsPlugin.java $D/StepsReceiver.java $D/TicicAlarmPlugin.java $D/AlarmReceiver.java $D/TicicWidget.java $D/TicicWidgetPlugin.java
           cd android
-          ./gradlew assembleDebug
+          ./gradlew assembleDebug 2>&1 | tee /tmp/build_nocall.log
+      - name: Release notes
+        if: always()
+        shell: bash
+        run: |
+          {
+            if [ "${{ steps.full.outcome }}" = "success" ]; then
+              echo "Build: complete. Includes the home screen widget, step counter and call screen."
+            else
+              if [ "${{ steps.nowidget.outcome }}" = "success" ]; then echo "Build: no home screen widget in this version."
+              elif [ "${{ steps.nosteps.outcome }}" = "success" ]; then echo "Build: no widget and no step counter in this version."
+              else echo "Build: basic version (no widget, step counter or call screen)."; fi
+              echo
+              echo "First errors found:"
+              grep -h "error:" /tmp/build_full.log 2>/dev/null | sed 's#.*/com/ticic/daily/##' | sort -u | head -8
+              grep -h "error:" /tmp/build_nowidget.log 2>/dev/null | sed 's#.*/com/ticic/daily/##' | sort -u | head -4
+            fi
+          } > /tmp/notes.md
+          cat /tmp/notes.md
       - name: Rename APK
         run: cp android/app/build/outputs/apk/debug/app-debug.apk TicicOS.apk
       - name: Publish release
@@ -700,4 +893,5 @@ jobs:
         with:
           tag_name: apk-${{ github.run_number }}
           name: Ticic APK ${{ github.run_number }}
+          body_path: /tmp/notes.md
           files: TicicOS.apk

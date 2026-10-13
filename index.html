@@ -1361,7 +1361,7 @@ function showProfileStep(mode) {
   const phone = '<div class="flab"><label for="o-phone">Mobile number</label></div><div class="ccrow"><div class="fld cc"><input id="o-cc" type="text" value="+91" inputmode="tel" aria-label="Country code" maxlength="4"></div><div class="fld full grow"><input id="o-phone" type="tel" inputmode="numeric" data-digits="12" placeholder="Mobile number" autocomplete="tel-national"></div></div>';
   const skip = '<button type="button" class="btn ghost wide" data-act="' + (S.onboarded ? 'o-cancel' : 'o-nologin') + '">' + (S.onboarded ? 'Not now' : 'Continue without login') + '</button><span class="fine">Login is optional. You can set it up later in Reminders.</span></div>';
   o.innerHTML = '<div class="onbin form"><div class="brand">' + logoImg('blogo') + '<b>Ticic</b></div>' + seg + (login ?
-    '<h1>Welcome back</h1><p>Log in with the mobile number and password you signed up with.</p>' + phone +
+    '<h1>Welcome back</h1><p>Log in with the mobile number and password you signed up with.</p>' + (cloudOn() ? '' : '<p class="hint">Online accounts are off in this app. Login works only for the account made on this phone.</p>') + phone +
     '<div class="flab"><label for="o-pin">Password</label></div>' + FIELD_password('o-pin', '4-digit password') +
     '<div class="ferr" id="o-err" role="alert"></div><button type="button" class="btn glow big go" data-act="o-login"><span class="arr">' + ic('back', 20) + '</span><span class="gt">Slide to log in</span></button>' + skip
     :
@@ -1472,13 +1472,13 @@ const AUTH_ACT = {
       S.noLogin = false; S.onboarded = true; S.lockOn = true; if (!S.tasks.length) addExamples();
       closeOnboarding(); commit(); cloudPush(true); toast('Welcome back' + (S.name ? ', ' + S.name : '')); return;
     }
-    if (!cloudOn()) return onbError(p ? 'This number is not signed up on this phone.' : 'No account on this phone yet. Tap Sign up to create one.', 'o-phone');
+    if (!cloudOn()) return onbError('Online login is not switched on in this app, so a new phone cannot find your old account. Tap Sign up, then restore your backup in Settings.', 'o-phone');
     const g = $('[data-act="o-login"] .gt'); if (g) g.textContent = 'Checking...';
     let r, ck;
     try { ck = await cloudHash(cc + ph, pin); r = await cloudCall('ticic_pull', { p_phone: cc + ph, p_hash: ck }); }
-    catch (e) { if (g) g.textContent = 'Slide to log in'; return onbError('No internet. Connect and try again.', 'o-phone'); }
+    catch (e) { if (g) g.textContent = 'Slide to log in'; return onbError(navigator.onLine === false ? 'No internet. Connect and try again.' : 'Could not reach the account server. Try again in a minute.', 'o-phone'); }
     if (g) g.textContent = 'Slide to log in';
-    if (!r || r.s === 'none') return onbError('No account found for this number. Tap Sign up.', 'o-phone');
+    if (!r || r.s === 'none') return onbError('No saved account for this number. It may have been created before online login was on. Tap Sign up with the same number.', 'o-phone');
     if (r.s === 'locked') return onbError('Too many wrong tries. Try again in 15 minutes.', 'o-pin');
     if (r.s !== 'ok') return onbError('Wrong password. Try again.', 'o-pin');
     const salt = uid(); restoreFrom(r.data);
@@ -1903,7 +1903,7 @@ function stepsCard() {
   const head = (title, sub, extra) => '<section class="glass scard rise" id="stepcard" style="--i:4"><div class="shd"><span class="sico">' + ic('pulse', 20) + '</span><div><b>' + title + '</b><small>' + sub + '</small></div>' + (extra || '') + '</div></section>';
   const nat = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
   if (!nat) return head('Steps', 'Step counting works in the installed app');
-  if (!stepsP()) return head('Steps', 'Not in this version yet. Update the app from GitHub');
+  if (!stepsP()) return head('Steps', 'This installed app has no step sensor part. Install the newest TicicOS.apk from Releases');
   if (!STEPS.loaded) return head('Steps', 'Checking your step sensor...');
   if (!STEPS.ok) return head('Steps', 'This phone has no step sensor');
   if (!STEPS.granted) return '<section class="glass scard rise" id="stepcard" style="--i:4"><div class="shd"><span class="sico">' + ic('pulse', 20) + '</span><div><b>Count your steps</b><small>Allow Physical activity to see your daily walk</small></div></div><button type="button" class="btn sm sbtn" data-act="st-on">Turn on step counting</button></section>';
@@ -1994,9 +1994,9 @@ function wxTip(d) {
 }
 function wxCard() {
   const head = (a, b, c) => '<section class="glass wcard rise" id="wxcard" data-act="wx-open" style="--i:4">' + a + '</section>';
-  if (!S.place) return head('<span class="wico">' + ic('wcloud', 30) + '</span><div class="wmain"><b>Weather</b><small>Add your city to see today\'s weather</small></div><span class="wgo">Add</span>');
+  if (!S.place) return head('<span class="wico">' + ic('wcloud', 30) + '</span><div class="wmain"><b>Weather</b><small>Tap to show today\'s weather</small></div><span class="wgo">Show</span>');
   const d = WX.data && WX.key === wxKey() ? WX.data : null;
-  if (!d) return head('<span class="wico">' + ic('wcloud', 30) + '</span><div class="wmain"><b>' + esc(S.place.name) + '</b><small>' + (WX.err ? 'Weather is unavailable. Check your internet.' : 'Loading weather...') + '</small></div>');
+  if (!d) return head('<span class="wico">' + ic('wcloud', 30) + '</span><div class="wmain"><b>' + esc(S.place.name) + '</b><small>' + (WX.err ? 'Weather is unavailable. Tap to retry.' : 'Loading weather...') + '</small></div>');
   const k = wxKind(d.current.weather_code, d.current.is_day), tip = wxTip(d);
   const nx = [1, 2, 3].map(i => { const kk = wxKind(d.daily.weather_code[i], 1), dt = parseISO(d.daily.time[i]); return '<span class="wd3"><small>' + WD[dt.getDay()] + '</small>' + ic(kk[0], 20) + '<b>' + Math.round(d.daily.temperature_2m_max[i]) + '°</b></span>'; }).join('');
   return head('<span class="wico">' + ic(k[0], 34) + '</span><div class="wmain"><b>' + Math.round(d.current.temperature_2m) + '°C</b><small>' + k[1] + ' · ' + esc(S.place.name) + '</small><em>High ' + Math.round(d.daily.temperature_2m_max[0]) + '° · Low ' + Math.round(d.daily.temperature_2m_min[0]) + '° · Rain ' + (d.daily.precipitation_probability_max[0] || 0) + '%</em></div><div class="wnext">' + nx + '</div>' + (tip ? '<div class="wtip">' + esc(tip) + '</div>' : ''));
@@ -2013,7 +2013,7 @@ function openWeather() {
   V.sheet = 'weather'; WX.results = []; WX.q = '';
   openSheet('<div class="shead"><h2>Weather</h2><button type="button" class="link" data-act="sheet-close">Done</button></div>' +
     '<form data-form="wxsearch" class="addrow"><label class="vh" for="wx-q">Search your city</label><input id="wx-q" type="text" placeholder="Search your city" autocomplete="off" enterkeyhint="search"><button type="submit" class="btn sm">Search</button></form>' +
-    '<div class="btnrow"><button type="button" class="btn ghost sm" data-act="wx-here">Use my location</button>' + (S.place ? '<button type="button" class="btn plain sm" data-act="wx-rm">Remove</button>' : '') + '</div>' +
+    '<div class="btnrow"><button type="button" class="btn ghost sm" data-act="wx-here">Find my area</button>' + (S.place ? '<button type="button" class="btn plain sm" data-act="wx-rm">Remove</button>' : '') + '</div>' +
     '<div id="wx-res"></div>' + (S.place ? '<div class="pst"><b>' + esc(S.place.name) + '</b><span>Weather by Open-Meteo</span></div>' : '') + '<div id="wx-forecast">' + wxForecast() + '</div>', 'tall');
 }
 async function wxSearch(q) {
@@ -2025,18 +2025,49 @@ async function wxSearch(q) {
   } catch (e) { WX.results = []; if (box) box.innerHTML = '<p class="hint">No internet. Try again.</p>'; return; }
   if ($('#wx-res')) $('#wx-res').innerHTML = wxResults();
 }
+async function wxIp() {
+  const srcs = [
+    ['https://ipwho.is/', d => d && d.success !== false && d.latitude != null ? { name: d.city || d.region || 'My area', lat: d.latitude, lon: d.longitude } : null],
+    ['https://get.geojs.io/v1/ip/geo.json', d => d && d.latitude ? { name: d.city || d.region || 'My area', lat: Number(d.latitude), lon: Number(d.longitude) } : null],
+    ['https://ipapi.co/json/', d => d && d.latitude ? { name: d.city || d.region || 'My area', lat: d.latitude, lon: d.longitude } : null]
+  ];
+  for (const [u, f] of srcs) {
+    try {
+      const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 8000);
+      const r = await fetch(u, { signal: ctl.signal }); clearTimeout(to);
+      if (!r.ok) continue; const p = f(await r.json());
+      if (p && isFinite(p.lat) && isFinite(p.lon)) return { name: p.name, lat: Math.round(p.lat * 100) / 100, lon: Math.round(p.lon * 100) / 100 };
+    } catch (e) {}
+  }
+  return null;
+}
+function wxGps() {
+  return new Promise(res => {
+    if (!navigator.geolocation) return res(null);
+    let done = false; const t = setTimeout(() => { if (!done) { done = true; res(null); } }, 7000);
+    try { navigator.geolocation.getCurrentPosition(p => { if (!done) { done = true; clearTimeout(t); res({ name: 'My location', lat: Math.round(p.coords.latitude * 100) / 100, lon: Math.round(p.coords.longitude * 100) / 100 }); } }, () => { if (!done) { done = true; clearTimeout(t); res(null); } }, { timeout: 6000, maximumAge: 600000 }); }
+    catch (e) { if (!done) { done = true; clearTimeout(t); res(null); } }
+  });
+}
+let wxLocBusy = false;
+async function wxLocate(silent) {
+  if (wxLocBusy) return; wxLocBusy = true;
+  if (!silent) toast('Finding your area...');
+  let p = await wxGps(), ip = false;
+  if (!p) { p = await wxIp(); ip = true; }
+  wxLocBusy = false;
+  if (!p) { if (!silent) toast('Could not find you. Search your city above.'); return; }
+  if (S.place && silent) return;
+  wxSet(p); if (!silent) toast(ip ? 'Weather set to ' + p.name + ' (approximate)' : 'Weather updated');
+}
 function wxSet(p) { S.place = p; save(); WX.data = null; cloudPush(); wxRefresh(true); if (V.sheet === 'weather') openWeather(); }
 
 /* ---------- actions ---------- */
 const ACT = {
-  'wx-open'() { openWeather(); },
+  'wx-open'() { const had = !!S.place; openWeather(); if (!had) wxLocate(false); },
   'wx-pick'(el) { const r = WX.results[Number(el.dataset.i)]; if (r) { wxSet({ name: r.name, lat: r.latitude, lon: r.longitude }); toast('Weather set to ' + r.name); } },
   'wx-rm'() { S.place = null; save(); WX.data = null; cloudPush(); closeSheet(); render(); },
-  'wx-here'() {
-    if (!navigator.geolocation) return toast('Location is not available here');
-    toast('Finding your location...');
-    navigator.geolocation.getCurrentPosition(p => { wxSet({ name: 'My location', lat: Math.round(p.coords.latitude * 100) / 100, lon: Math.round(p.coords.longitude * 100) / 100 }); toast('Weather updated'); }, () => toast('Location is blocked. Search your city instead.'), { timeout: 12000, maximumAge: 600000 });
-  },
+  async 'wx-here'() { wxLocate(false); },
   'st-hist'() { openStepHistory(); },
   async 'st-on'() { const p = stepsP(); if (!p) return; try { const r = await p.request(); STEPS.granted = !!r.granted; if (STEPS.granted) { await p.start(); toast('Step counting is on'); } else toast('Allow Physical activity in phone Settings'); } catch (e) {} stepsRefresh(); },
   'st-goal'() { const g = [4000, 6000, 8000, 10000], n = g[(g.indexOf(stepGoal()) + 1) % g.length]; S.stepGoal = n; save(); const el = $('#stepcard'); if (el) el.outerHTML = stepsCard(); toast('Daily goal: ' + fmtN(n) + ' steps'); cloudPush(); },
@@ -2372,6 +2403,7 @@ function boot() {
   render();
   NAT.init(onNative); nativeChrome();
   CALLN.check().then(ok => { if (ok) { callPending(); syncNow(); } });
+  const wxAutoT = setInterval(() => { if (S.place || S.wxAuto) return clearInterval(wxAutoT); if (S.onboarded && !document.hidden && !V.sheet) { S.wxAuto = 1; save(); clearInterval(wxAutoT); wxLocate(true); } }, 3000);
   wxRefresh(); setInterval(() => { if (!document.hidden) wxRefresh(); }, 30 * 60000);
   stepsRefresh(); setInterval(() => { if (!document.hidden && !V.sheet) stepsRefresh(); }, 60000);
   NAT.status().then(s => { NAT_state = V.notif = s; render(); if (s === 'granted') syncNow(); else setTimeout(autoAsk, 900); });

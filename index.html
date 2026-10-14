@@ -534,6 +534,20 @@ textarea:focus{border-color:rgb(var(--blue))}
 .prow em{font-style:normal;font-size:12.5px;color:var(--mu)}
 .lite *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}.lite .glass{background:rgba(255,255,255,.92)!important}.lite .rise{animation-duration:.2s!important}
 .wk{display:flex;align-items:stretch;gap:8px}.wk .wb i{background:#BFD6FB}.wk .wb.now i{background:#0B5FD8}.wk .wb em{color:#5B6B8C}
+.qbox{position:relative}.qbox input{padding-right:48px}.micb{position:absolute;right:12px;top:28px;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:rgba(var(--blue),.1);color:rgb(var(--blue))}
+.calh{display:flex;align-items:center;justify-content:space-between;margin:4px 0 12px}.calh b{font-size:20px;letter-spacing:-.03em}
+.calg{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}.calg .ch{text-align:center;font-size:12px;font-weight:700;color:var(--mu);padding-bottom:2px}
+.cd{aspect-ratio:1;border-radius:14px;background:rgba(255,255,255,.75);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:600;font-size:15px;color:var(--tx)}
+.cd i{width:5px;height:5px;border-radius:50%;background:rgb(var(--blue));margin-top:3px}.cd.today{background:rgb(var(--blue));color:#fff}.cd.today i{background:#fff}.cd.off{opacity:.55}
+.kst{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.kst div{background:#fff;border-radius:18px;padding:12px 6px;text-align:center}.kst b{display:block;font-size:26px;letter-spacing:-.03em;color:var(--tx)}.kst small{font-size:11.5px;color:var(--mu);font-weight:600}
+.hmg{display:grid;grid-template-columns:repeat(14,1fr);gap:4px}.hmc{display:grid;gap:4px}.hm{display:block;aspect-ratio:1;border-radius:5px;background:rgba(var(--blue),.08)}
+.hm.l1{background:rgba(var(--blue),.28)}.hm.l2{background:rgba(var(--blue),.5)}.hm.l3{background:rgba(var(--blue),.75)}.hm.l4{background:rgb(var(--blue))}.hm.f{background:transparent}
+.hmleg{display:flex;align-items:center;gap:4px;justify-content:flex-end;margin-top:8px}.hmleg .hm{width:14px;aspect-ratio:1}.hmleg small{color:var(--mu);font-size:11px;font-weight:600;margin:0 4px}
+.mrow{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}.mdot{background:#fff;border-radius:14px;padding:8px 2px;text-align:center}.mdot b{display:block;font-size:12px;color:var(--tx)}.mdot small{font-size:11px;color:var(--mu);font-weight:600}
+.ftime{font-size:88px;font-weight:800;letter-spacing:-.05em;text-align:center;margin:10px 0 14px;color:var(--tx);font-variant-numeric:tabular-nums}
+.ckin{padding:16px;border-radius:26px;margin:14px 0;display:flex;flex-direction:column;gap:2px}.ckin b{font-size:18px;letter-spacing:-.02em}.ckin small{color:var(--mu);font-size:13px}
+.mood{display:flex;gap:8px;margin-top:10px}.mood button{flex:1;height:42px;border-radius:21px;background:#fff;border:1px solid var(--line);font-weight:700;font-size:15px;color:var(--tx)}.mood button:active{background:rgb(var(--blue));color:#fff}
+.tph{display:block;width:100%;max-height:240px;object-fit:cover;border-radius:20px;margin:8px 0}
 </style></head><body><div id="splash" aria-hidden="true"><div class="slogo" id="slogo"></div><div class="sname">Ticic</div></div>
 <div class="blobs" aria-hidden="true"><i></i><i></i><i></i></div>
 <div id="app"><div id="warn"></div><main id="view"></main></div>
@@ -579,7 +593,7 @@ function relDay(d) {
 const COL = { pink: '255,150,205', violet: '120,150,255', cyan: '90,190,255', lime: '190,235,110', amber: '255,196,100', coral: '255,140,120' };
 const COLNAMES = Object.keys(COL);
 const REMINDS = [[0, 'At time'], [10, '10 min before'], [30, '30 min before'], [60, '1 hr before'], ['morning', 'Morning of'], ['none', 'No reminder']];
-const REPEATS = [['none', 'Never'], ['daily', 'Daily'], ['weekdays', 'Weekdays'], ['weekly', 'Weekly'], ['monthly', 'Monthly']];
+const REPEATS = [['none', 'Never'], ['daily', 'Daily'], ['weekdays', 'Weekdays'], ['weekly', 'Weekly'], ['monthly', 'Monthly'], ['yearly', 'Yearly']];
 const WDS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 function repLabel(r) { if (!r || r === 'none') return ''; if (r.indexOf('dow:') === 0) return 'every ' + r.slice(4).split(',').map(n => WDS[+n]).join(', '); return r; }
 
@@ -648,6 +662,7 @@ function advance(d, rep) {
   if (rep === 'weekdays') { let x = addDays(d, 1), g = 0; while ((dow(x) === 0 || dow(x) === 6) && g++ < 3) x = addDays(x, 1); return x; }
   if (rep && rep.indexOf('dow:') === 0) { const set = rep.slice(4).split(',').map(Number); let x = addDays(d, 1), g = 0; while (!set.includes(dow(x)) && g++ < 8) x = addDays(x, 1); return x; }
   if (rep === 'weekly') return addDays(d, 7);
+  if (rep === 'yearly') { const x = parseISO(d), m = x.getMonth(), dd = x.getDate(); const y = new Date(x.getFullYear() + 1, m, 1); y.setDate(Math.min(dd, new Date(y.getFullYear(), m + 1, 0).getDate())); return iso(y); }
   if (rep === 'monthly') {
     const x = parseISO(d), day = x.getDate();
     x.setDate(1); x.setMonth(x.getMonth() + 1);
@@ -703,6 +718,7 @@ function parseQuick(raw) {
   s = s.replace(/\severy\s+(sun|mon|tue|wed|thu|fri|sat)[a-z]*(?=\s)/i, (x, w) => { o.repeat = 'weekly'; o.due = nextDow(w); return ' '; });
   s = s.replace(/\s(?:weekly|every\s+week)(?=\s)/i, () => { o.repeat = 'weekly'; return ' '; });
   s = s.replace(/\s(?:monthly|every\s+month)(?=\s)/i, () => { o.repeat = 'monthly'; return ' '; });
+  s = s.replace(/\s(?:yearly|annually|every\s+year)(?=\s)/i, () => { o.repeat = 'yearly'; return ' '; });
   const setT = (h, mi, ap) => {
     h = +h; mi = +(mi || 0);
     if (ap) { ap = ap.toLowerCase(); if (ap === 'pm' && h < 12) h += 12; if (ap === 'am' && h === 12) h = 0; }
@@ -987,7 +1003,7 @@ function viewToday() {
   const hero = queue[0], rest = queue.slice(1);
   let i = 0;
   let h = '<header class="top rise" style="--i:0"><div class="who"><button type="button" class="avatar" data-act="settings" aria-label="Settings and reminders">' + avatarIn() + '</button><div class="wt"><b>' + esc(S.name || 'You') + '</b><small>' + WDL[dt.getDay()] + ', ' + dt.getDate() + ' ' + MONL[dt.getMonth()] + '</small></div></div>' +
-    '<div class="tools"><button type="button" class="round" data-tab="upcoming" aria-label="Upcoming tasks">' + ic('cal', 20) + '</button><button type="button" class="round" data-act="notifs" aria-label="Notifications">' + ic('bell', 20) + (V.notif !== 'granted' ? '<span class="dot"></span>' : '') + '</button></div></header>';
+    '<div class="tools"><button type="button" class="round" data-act="tools" aria-label="More tools">' + ic('grid', 20) + '</button><button type="button" class="round" data-tab="upcoming" aria-label="Upcoming tasks">' + ic('cal', 20) + '</button><button type="button" class="round" data-act="notifs" aria-label="Notifications">' + ic('bell', 20) + (V.notif !== 'granted' ? '<span class="dot"></span>' : '') + '</button></div></header>';
   h += '<h1 class="hi rise" style="--i:1">' + (x.isT ? '<b>Hi ' + esc(S.name || 'there') + ',</b> <span class="soft">' + greeting().toLowerCase() + '!</span>' : '<b>' + esc(relDay(d)) + ',</b> <span class="soft">' + x.pend.length + ' planned</span>') + '</h1>';
   h += '<div class="days rise" style="--i:2" role="group" aria-label="Pick a day">';
   for (let k = 0; k < 7; k++) {
@@ -1174,7 +1190,7 @@ function openQuickAdd(pre) {
   QA = { text: '', note: '', manual: {}, more: false, preDue: pre.due !== undefined ? pre.due : (V.view === 'today' ? V.day : null), preList: pre.list || (V.view === 'list' ? V.listId : null) };
   V.sheet = 'add';
   openSheet('<div class="shead"><h2>New task</h2><button type="button" class="link" data-act="sheet-close">Cancel</button></div>' +
-    '<form data-form="qa" class="qa"><div class="qbox"><label class="cap" for="qa-in">Task name</label><input id="qa-in" type="text" autocomplete="off" enterkeyhint="done" placeholder="Call mom, pay rent, take medicine"><p>Tip: type "tomorrow 8 pm" or "every day" and the timing fills in for you.</p></div>' +
+    '<form data-form="qa" class="qa"><div class="qbox"><label class="cap" for="qa-in">Task name</label><input id="qa-in" type="text" autocomplete="off" enterkeyhint="done" placeholder="Call mom, pay rent, take medicine"><button type="button" class="micb" data-act="qa-mic" aria-label="Speak your task">' + ic('mic', 20) + '</button><p>Tip: type "tomorrow 8 pm" or "every day" and the timing fills in for you.</p></div>' +
     '<div class="cap2">Timing</div><div class="tgrid"><label class="tile"><span>Date</span><input type="date" id="qa-date"></label><label class="tile"><span>Time</span><input type="time" id="qa-time"></label></div><div id="qa-quick"></div>' +
     '<button type="button" class="more" id="qa-more" data-act="qa-more" aria-expanded="false" aria-controls="qa-opts"><span>More options</span>' + ic('back', 14) + '</button><div id="qa-opts" class="opts" hidden></div>' +
     '<button type="submit" class="btn glow big">Add task</button></form>', 'tall');
@@ -1204,9 +1220,10 @@ function openTask(id) {
     '<div class="orow sw-row"><span>Nudge me again<small>Repeats the reminder if you miss it</small></span><button type="button" id="td-nudge" class="sw' + (t.nudge ? ' on' : '') + '" role="switch" aria-checked="' + !!t.nudge + '" aria-label="Nudge me again" data-act="td-nudge"></button></div></div>' +
     '<div class="lbl">Steps</div><div id="td-steps" class="steps">' + stepsHtml() + '</div><form data-form="stepadd" class="addrow slim"><label class="vh" for="td-step">Add a step</label><input id="td-step" type="text" placeholder="Add a step" autocomplete="off" enterkeyhint="done"><button type="submit" class="btn sm">Add</button></form>' +
     '<div class="lbl">Notes</div><label class="vh" for="td-note">Notes</label><textarea id="td-note" rows="3" placeholder="Add a note">' + esc(t.note || '') + '</textarea>' +
+    '<div class="btnrow" style="margin-top:12px"><button type="button" class="btn ghost sm" data-act="td-focus">Focus timer</button><button type="button" class="btn ghost sm" data-act="td-share">Share</button><button type="button" class="btn ghost sm" data-act="td-photo">Add photo</button></div><input type="file" id="td-photo-in" accept="image/*" hidden><div id="td-ph"></div>' +
     '<div class="sfoot"><button type="button" class="btn ghost danger" data-act="td-delete" id="td-del">Delete</button><button type="button" class="btn glow grow" data-act="td-done">' + (t.done ? 'Mark not done' : 'Mark done') + '</button></div>', 'tall');
   tdChips(t);
-  TD = { id, stepsHtml };
+  TD = { id, stepsHtml }; tdPhoto(id);
 }
 let TD = null;
 function tdChips(t) {
@@ -1741,6 +1758,7 @@ function extraCards() {
   const td = Date.now(), last = S.lastBackup || S.firstRun || td;
   if (!cloudOn() && S.tasks.length >= 3 && td - last > 7 * 864e5) h += wcardHtml('bk-now', 'shield' in IC ? 'shield' : 'bell', 'Back up your tasks', 'Copy a backup so you never lose them', '<span class="wgo">Copy</span>');
   if (!S.hlHide && !S.tasks.some(t => t.list === 'health' && /water|medicine|pill|tablet/i.test(t.title))) h += wcardHtml('hl-open', 'heart', 'Water and medicine', 'Add healthy reminders in one tap', '<span class="wgo">Add</span>');
+  h += checkinCard();
   if (!S.tipsHide && S.tasks.length < 6) h += wcardHtml('tips-hide', 'bell', 'Quick tips', 'Type like you talk: "Pay rent every month 5pm". Drag the blue card to finish. Tap the bell for reminders. Tap here to hide.');
   return h;
 }
@@ -2473,8 +2491,232 @@ function endSplash(first) {
   const min = document.documentElement.classList.contains('lite') ? 250 : (first ? 650 : 420), wait = Math.max(0, min - (Date.now() - SPL_AT));
   setTimeout(() => { requestAnimationFrame(() => { sp.classList.add('out'); setTimeout(() => sp.remove(), 320); }); }, wait);
 }
+/* ---------- tools: calendar, habits, focus, check-in, birthdays, courses, share, export, accent, voice ---------- */
+Object.assign(IC, {
+  grid: '<rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/>',
+  mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/>',
+  timer: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/>',
+  gift: '<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M5 12v9h14v-9M12 8v13M12 8c-2 0-4-1-4-3s3-2 4 1c1-3 4-3 4-1s-2 3-4 3z"/>',
+  pill: '<rect x="3" y="9" width="18" height="6" rx="3" transform="rotate(-45 12 12)"/><path d="M9 9l6 6"/>',
+  file: '<path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',
+  camera: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+  share: '<path d="M12 3v12M8 7l4-4 4 4M5 12v8h14v-8"/>',
+  grid2: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>'
+});
+const PL = n => (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins[n]) || null;
+async function shareText(text, title) {
+  try { const sh = PL('Share'); if (sh) { await sh.share({ title: title || 'Ticic', text, dialogTitle: 'Share' }); return; } } catch (e) { return; }
+  try { if (navigator.share) { await navigator.share({ title: title || 'Ticic', text }); return; } } catch (e) { return; }
+  toast((await copyText(text, document.createElement('textarea'))) ? 'Copied. Paste it to share.' : 'Could not share');
+}
+const toolRow = (act, ico, t, s) => '<button type="button" class="nrow" data-act="' + act + '"><span class="ni">' + ic(ico, 18) + '</span><span class="nt"><b>' + t + '</b><small>' + s + '</small></span></button>';
+const ACCENTS = { blue: ['5,96,224', 'Blue'], indigo: ['79,70,229', 'Indigo'], teal: ['13,148,136', 'Teal'] };
+function applyAccent() { const a = ACCENTS[S.accent] || ACCENTS.blue; document.documentElement.style.setProperty('--blue', a[0]); }
+function openTools() {
+  V.sheet = 'tools';
+  openSheet('<div class="shead"><h2>Tools</h2><button type="button" class="link" data-act="sheet-close">Done</button></div><div class="hlist">' +
+    toolRow('cal-open', 'cal', 'Calendar', 'See your month at a glance') +
+    toolRow('hab-open', 'grid2', 'Habits', 'Streaks and your last 14 weeks') +
+    toolRow('foc-open', 'timer', 'Focus timer', 'Work in calm 25 minute blocks') +
+    toolRow('bd-open', 'gift', 'Birthdays and bills', 'Yearly or monthly, with early alerts') +
+    toolRow('mc-open', 'pill', 'Medicine course', 'Reminders that stop by themselves') +
+    toolRow('share-today', 'share', 'Share my plan', 'Send today to WhatsApp or anyone') +
+    toolRow('exp-open', 'file', 'Export', 'Copy or share your tasks as a table') +
+    '</div><div class="lbl">Accent colour</div>' + chipRow(Object.keys(ACCENTS).map(k => [k, ACCENTS[k][1]]), S.accent || 'blue', 'acc-set', 'a'), 'tall');
+}
+/* calendar */
+function calMap(a, b) {
+  const m = {};
+  S.tasks.forEach(t => { if (t.done || !t.due) return; let d = t.due, g = 0; while (d <= b && g++ < 500) { if (d >= a) m[d] = (m[d] || 0) + 1; if (!t.repeat || t.repeat === 'none') break; d = advance(d, t.repeat); } });
+  return m;
+}
+function openCal(off) {
+  off = off || 0; CAL = off; V.sheet = 'cal';
+  const b = new Date(), m = new Date(b.getFullYear(), b.getMonth() + off, 1), first = (m.getDay() + 6) % 7, days = new Date(m.getFullYear(), m.getMonth() + 1, 0).getDate(), td = today();
+  const a = iso(m), z = iso(new Date(m.getFullYear(), m.getMonth(), days)), mp = calMap(a, z);
+  let c = ['M', 'T', 'W', 'T', 'F', 'S', 'S'].map(x => '<span class="ch">' + x + '</span>').join('');
+  for (let i = 0; i < first; i++) c += '<span></span>';
+  for (let d = 1; d <= days; d++) {
+    const ds = iso(new Date(m.getFullYear(), m.getMonth(), d)), n = ds < td ? doneCountOn(ds) : (mp[ds] || 0);
+    c += '<button type="button" class="cd' + (ds === td ? ' today' : '') + (ds < td ? ' off' : '') + '" data-act="cal-day" data-d="' + ds + '" aria-label="' + d + ' ' + MONL[m.getMonth()] + (n ? ', ' + n + (ds < td ? ' done' : ' planned') : '') + '">' + d + (n ? '<i></i>' : '') + '</button>';
+  }
+  const html = '<div class="shead"><h2>Calendar</h2><button type="button" class="link" data-act="sheet-close">Done</button></div><div class="calh"><button type="button" class="round" data-act="cal-nav" data-o="-1" aria-label="Previous month">' + ic('back', 18) + '</button><b>' + MONL[m.getMonth()] + ' ' + m.getFullYear() + '</b><button type="button" class="round" data-act="cal-nav" data-o="1" aria-label="Next month" style="transform:scaleX(-1)">' + ic('back', 18) + '</button></div><div class="calg">' + c + '</div><p class="hint">A dot means tasks planned (or done, for past days). Tap a day to open it.</p>';
+  if (V.sheet === 'cal' && $('.sheet') && $('.calg')) { $('.sheet').innerHTML = '<div class="grab" aria-hidden="true"><i></i></div>' + html; } else openSheet(html, 'tall');
+}
+let CAL = 0;
+/* habits */
+function openHabits() {
+  V.sheet = 'habits'; const td = today(), start = addDays(td, -((dow(td) + 6) % 7) - 7 * 13); let cols = '', tot = 0;
+  for (let w = 0; w < 14; w++) { let col = ''; for (let r = 0; r < 7; r++) { const d = addDays(start, w * 7 + r), n = d > td ? -1 : doneCountOn(d); if (n > 0) tot += n; col += '<i class="hm ' + (n < 0 ? 'f' : 'l' + (n === 0 ? 0 : n < 3 ? 1 : n < 5 ? 2 : n < 8 ? 3 : 4)) + '"></i>'; } cols += '<div class="hmc">' + col + '</div>'; }
+  const ws = weekStats(0), fm = Object.keys(S.focus || {}).reduce((a, k) => a + (dayDiff(td, k) < 7 && dayDiff(td, k) >= 0 ? S.focus[k] : 0), 0);
+  const ML = { 1: 'Rough', 2: 'Okay', 3: 'Great' }; let mood = '';
+  for (let k = 6; k >= 0; k--) { const d = addDays(td, -k), v = (S.mood || {})[d]; mood += '<span class="mdot"><b>' + (v ? ML[v] : '-') + '</b><small>' + WD[dow(d)] + '</small></span>'; }
+  openSheet('<div class="shead"><h2>Habits</h2><button type="button" class="link" data-act="sheet-close">Done</button></div><div class="kst"><div><b>' + streak() + '</b><small>day streak</small></div><div><b>' + bestStreak() + '</b><small>best streak</small></div><div><b>' + tot + '</b><small>done in 14 weeks</small></div></div>' +
+    '<div class="lbl">Last 14 weeks</div><div class="hmg">' + cols + '</div><div class="hmleg"><small>Less</small><i class="hm l0"></i><i class="hm l1"></i><i class="hm l2"></i><i class="hm l3"></i><i class="hm l4"></i><small>More</small></div>' +
+    '<div class="kst" style="margin-top:14px"><div><b>' + ws.total + '</b><small>done this week</small></div><div><b>' + fm + '</b><small>focus min / 7 days</small></div><div><b>' + Object.keys(S.mood || {}).length + '</b><small>check-ins</small></div></div>' +
+    '<div class="lbl">How your week felt</div><div class="mrow">' + mood + '</div>', 'tall');
+}
+/* focus */
+const FOC = { min: 25, end: 0, run: false, left: 25 * 60, task: null, tmr: null };
+const fmtMS = s => pad(Math.floor(s / 60)) + ':' + pad(s % 60);
+const focLeft = () => FOC.run ? Math.max(0, Math.round((FOC.end - Date.now()) / 1000)) : FOC.left;
+function focPaint() {
+  const el = $('#f-time'); if (!el) return; const s = focLeft(); el.textContent = fmtMS(s);
+  const b = $('#f-bar'); if (b) b.style.width = Math.round(100 - s / (FOC.min * 60) * 100) + '%';
+  const g = $('#f-go'); if (g) g.textContent = FOC.run ? 'Pause' : (s < FOC.min * 60 ? 'Resume' : 'Start');
+}
+function chime() {
+  try { const A = window.AudioContext || window.webkitAudioContext, c = new A(); [[880, 0], [1320, .18], [1760, .36]].forEach(p => { const o = c.createOscillator(), g = c.createGain(); o.type = 'sine'; o.frequency.value = p[0]; g.gain.setValueAtTime(0, c.currentTime + p[1]); g.gain.linearRampToValueAtTime(.25, c.currentTime + p[1] + .02); g.gain.exponentialRampToValueAtTime(.001, c.currentTime + p[1] + .9); o.connect(g); g.connect(c.destination); o.start(c.currentTime + p[1]); o.stop(c.currentTime + p[1] + 1); }); } catch (e) {}
+}
+function focDone() {
+  FOC.run = false; FOC.left = FOC.min * 60; clearInterval(FOC.tmr);
+  const d = today(); S.focus = S.focus || {}; S.focus[d] = (S.focus[d] || 0) + FOC.min; save(); chime(); buzz([200, 100, 200, 100, 400]); toast('Focus done. Take a short break.'); focPaint();
+}
+function focTick() { if (FOC.run && Date.now() >= FOC.end) focDone(); focPaint(); }
+function openFocus(tid) {
+  if (tid !== undefined) FOC.task = tid || null; V.sheet = 'focus'; const t = FOC.task && taskById(FOC.task), fm = (S.focus || {})[today()] || 0;
+  openSheet('<div class="shead"><h2>Focus timer</h2><button type="button" class="link" data-act="sheet-close">Done</button></div><p class="hint" style="text-align:center">' + (t ? 'Working on: <b>' + esc(t.title) + '</b>' : 'Pick a length and start. Keep the app open.') + '</p><div class="ftime" id="f-time">25:00</div><div class="bar" aria-hidden="true"><i id="f-bar" style="width:0"></i></div>' +
+    '<div style="margin:16px 0">' + chipRow([[15, '15 min'], [25, '25 min'], [45, '45 min']], FOC.min, 'foc-set', 'm') + '</div><div class="sfoot"><button type="button" class="btn ghost" data-act="foc-reset">Reset</button><button type="button" class="btn glow grow" id="f-go" data-act="foc-go">Start</button></div><p class="hint" style="text-align:center">Today: ' + fm + ' focus minutes</p>', 'tall');
+  focPaint();
+}
+/* check-in */
+function checkinCard() {
+  if ((S.mood || {})[today()] || new Date().getHours() < 17) return '';
+  return '<section class="glass ckin rise" style="--i:4"><b>How was your day?</b><small>One tap. Your week shows in Habits.</small><div class="mood"><button type="button" data-act="mood" data-v="1">Rough</button><button type="button" data-act="mood" data-v="2">Okay</button><button type="button" data-act="mood" data-v="3">Great</button></div></section>';
+}
+/* birthdays and bills */
+let BD = { kind: 'bday', rep: 'yearly', pre: [0, 1] };
+function nextOcc(d, rep) { let g = 0; while (d < today() && g++ < 600) d = advance(d, rep); return d; }
+function bdPaint() {
+  const k = { bday: 'Birthday', bill: 'Bill', event: 'Event' };
+  $('#bd-kind').innerHTML = chipRow(Object.keys(k).map(x => [x, k[x]]), BD.kind, 'bd-set', 'kind');
+  $('#bd-rep').innerHTML = chipRow([['yearly', 'Every year'], ['monthly', 'Every month']], BD.rep, 'bd-set', 'rep');
+  $('#bd-pre').innerHTML = [[0, 'On the day'], [1, '1 day before'], [3, '3 days before'], [7, '1 week before']].map(a => '<button type="button" class="chip' + (BD.pre.includes(a[0]) ? ' on' : '') + '" data-act="bd-pre" data-v="' + a[0] + '" aria-pressed="' + BD.pre.includes(a[0]) + '">' + a[1] + '</button>').join('');
+  $('#bd-amt-w').style.display = BD.kind === 'bill' ? '' : 'none';
+  $('#bd-name').placeholder = BD.kind === 'bday' ? 'Name, like Mom' : BD.kind === 'bill' ? 'Bill, like Electricity' : 'Event name';
+}
+function openBday() {
+  BD = { kind: 'bday', rep: 'yearly', pre: [0, 1] }; V.sheet = 'bday';
+  openSheet('<div class="shead"><h2>Birthdays and bills</h2><button type="button" class="link" data-act="sheet-close">Done</button></div><p class="hint">Add it once. It repeats and warns you ahead.</p><div id="bd-kind"></div>' +
+    '<div class="fld full"><label class="vh" for="bd-name">Name</label><input id="bd-name" type="text" autocomplete="off"></div><div class="orow"><span>Date</span><label class="fld inline"><span class="vh">Date</span><input type="date" id="bd-date" value="' + today() + '"></label></div>' +
+    '<div class="fld full" id="bd-amt-w"><label class="vh" for="bd-amt">Amount</label><input id="bd-amt" type="text" inputmode="decimal" placeholder="Amount (optional)" autocomplete="off"></div><div class="lbl">Repeat</div><div id="bd-rep"></div><div class="lbl">Alert me</div><div id="bd-pre"></div><button type="button" class="btn glow big" data-act="bd-save" style="margin-top:16px">Save</button>', 'tall');
+  bdPaint();
+}
+function bdSave() {
+  const name = $('#bd-name').value.trim(), date = $('#bd-date').value, amt = ($('#bd-amt').value || '').trim();
+  if (!name) return shake('.fld.full'); if (!date) return toast('Pick a date');
+  const title = BD.kind === 'bday' ? name + (/'s$/i.test(name) ? '' : "'s") + ' birthday' : BD.kind === 'bill' ? name + ' bill' + (amt ? ' Rs ' + amt : '') : name;
+  const occ = nextOcc(date, BD.rep), pre = BD.pre.length ? BD.pre.slice().sort((a, b) => b - a) : [0]; let n = 0, first = null;
+  pre.forEach(k => {
+    let due = addDays(occ, -k); if (due < today()) due = addDays(advance(occ, BD.rep), -k);
+    if (!first || due < first) first = due;
+    S.tasks.push({ id: uid(), title: k === 0 ? title : title + (k === 1 ? ' tomorrow' : k === 7 ? ' in 1 week' : ' in ' + k + ' days'), note: '', due, time: null, remind: 'morning', repeat: BD.rep, prio: 'none', sound: 'default', nudge: false, list: 'inbox', steps: [], done: false, created: Date.now() + (n++), kind: BD.kind });
+  });
+  commit(); closeSheet(); toast('Saved. First alert: ' + relDay(first));
+}
+/* medicine course */
+let MC = { per: 2, days: 5, start: 'today', t: ['08:00', '14:00', '20:00'] };
+const MC_DEF = { 1: ['09:00'], 2: ['08:00', '20:00'], 3: ['08:00', '14:00', '20:00'] };
+function mcPaint() {
+  $('#mc-per').innerHTML = chipRow([[1, 'Once a day'], [2, 'Twice a day'], [3, '3 times a day']], MC.per, 'mc-set', 'per');
+  $('#mc-days').innerHTML = chipRow([[3, '3 days'], [5, '5 days'], [7, '7 days'], [10, '10 days'], [14, '14 days']], MC.days, 'mc-set', 'days');
+  $('#mc-start').innerHTML = chipRow([['today', 'Today'], ['tomorrow', 'Tomorrow']], MC.start, 'mc-set', 'start');
+  $('#mc-times').innerHTML = MC.t.slice(0, MC.per).map((t, i) => '<label class="fld inline"><span class="vh">Time ' + (i + 1) + '</span><input type="time" data-mct="' + i + '" value="' + t + '"></label>').join('');
+  const cs = {}; S.tasks.forEach(t => { if (t.course && !t.done) { (cs[t.course] = cs[t.course] || { n: t.title, c: 0 }).c++; } });
+  $('#mc-act').innerHTML = Object.keys(cs).length ? '<div class="lbl">Active courses</div>' + Object.keys(cs).map(k => '<div class="panel"><div class="orow"><span style="flex:1 1 120px">' + esc(cs[k].n) + '<br><small>' + cs[k].c + ' reminders left</small></span><button type="button" class="btn ghost danger sm" data-act="mc-stop" data-id="' + k + '">Stop</button></div></div>').join('') : '';
+}
+function openCourse() {
+  MC = { per: 2, days: 5, start: 'today', t: ['08:00', '14:00', '20:00'].slice() }; MC.t = MC_DEF[2].concat(['20:00']); V.sheet = 'course';
+  openSheet('<div class="shead"><h2>Medicine course</h2><button type="button" class="link" data-act="sheet-close">Done</button></div><p class="hint">Reminders are made for each day and end by themselves.</p><div class="fld full"><label class="vh" for="mc-name">Medicine name</label><input id="mc-name" type="text" placeholder="Medicine name" autocomplete="off"></div>' +
+    '<div class="lbl">How often</div><div id="mc-per"></div><div class="lbl">Times</div><div class="orow" id="mc-times"></div><div class="lbl">For how long</div><div id="mc-days"></div><div class="lbl">Start</div><div id="mc-start"></div><button type="button" class="btn glow big" data-act="mc-save" style="margin-top:16px">Create reminders</button><div id="mc-act"></div><p class="hint">This is a reminder only. Follow your doctor\'s advice.</p>', 'tall');
+  mcPaint();
+}
+function mcSave() {
+  const name = $('#mc-name').value.trim(); if (!name) return shake('.fld.full');
+  $$('[data-mct]').forEach(i => { MC.t[Number(i.dataset.mct)] = i.value || MC.t[Number(i.dataset.mct)]; });
+  const cid = uid(), st = MC.start === 'tomorrow' ? addDays(today(), 1) : today(), now = new Date(); let n = 0, made = 0;
+  for (let d = 0; d < MC.days; d++) MC.t.slice(0, MC.per).forEach(tm => {
+    const due = addDays(st, d); if (atTime(due, tm) <= now) return;
+    S.tasks.push({ id: uid(), title: 'Take ' + name, note: '', due, time: tm, remind: 0, repeat: 'none', prio: 'none', sound: 'default', nudge: true, list: 'health', steps: [], done: false, created: Date.now() + (n++), course: cid }); made++;
+  });
+  if (!made) return toast('Pick later times or start tomorrow');
+  commit(); closeSheet(); toast(made + ' reminders added');
+}
+/* photo on task */
+function tdPhoto(id) {
+  const box = $('#td-ph'); if (!box) return; const d = store.get('ticic.ph.' + id);
+  box.innerHTML = d ? '<img class="tph" alt="Task photo" src="' + d + '"><div class="btnrow"><button type="button" class="btn plain sm" data-act="td-photo-rm">Remove photo</button></div>' : '<p class="hint">No photo yet.</p>';
+}
+function imgSmall(file, max, cb) {
+  const r = new FileReader();
+  r.onload = () => { const im = new Image(); im.onload = () => { const k = Math.min(1, max / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); cb(c.toDataURL('image/jpeg', .72)); }; im.onerror = () => cb(null); im.src = r.result; };
+  r.onerror = () => cb(null); r.readAsDataURL(file);
+}
+document.addEventListener('change', e => {
+  if (!e.target || e.target.id !== 'td-photo-in' || !TD) return; const f = e.target.files && e.target.files[0]; if (!f) return; const id = TD.id;
+  imgSmall(f, 720, d => { if (!d) return toast('Could not use that photo'); const ok = store.set('ticic.ph.' + id, d); if (ok === false) toast('Not enough space for the photo'); tdPhoto(id); });
+});
+/* export */
+const csvq = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+function csvAll() {
+  const rows = [['type', 'title', 'due', 'time', 'repeat', 'list', 'status', 'done_at']];
+  S.tasks.forEach(t => rows.push(['task', t.title, t.due || '', t.time || '', t.repeat || 'none', listOf(t.list).name, t.done ? 'done' : 'open', t.doneAt || '']));
+  S.history.forEach(h => rows.push(['repeat-done', h.title, h.date, '', '', listOf(h.list).name, 'done', h.at || '']));
+  return rows.map(r => r.map(csvq).join(',')).join('\n');
+}
+function openExport() {
+  V.sheet = 'export'; openSheet('<div class="shead"><h2>Export</h2><button type="button" class="link" data-act="sheet-close">Done</button></div><p class="hint">A table of your tasks that opens in Excel or Google Sheets. Paste it into a note or share it.</p><textarea id="x-csv" rows="6" readonly></textarea><div class="btnrow"><button type="button" class="btn ghost sm" data-act="exp-copy">Copy</button><button type="button" class="btn glow sm" data-act="exp-share">Share</button></div>', 'tall');
+  $('#x-csv').value = csvAll();
+}
+function planText() {
+  const td = today(), x = dayData(td), L = x.overdue.concat(x.pend);
+  return 'My plan for ' + WDL[dow(td)] + ' on Ticic:\n' + (L.length ? L.map(t => '- ' + t.title + (t.time ? ' (' + fmtTime(t.time) + ')' : '')).join('\n') : '- Nothing planned') + '\nDone today: ' + (x.doneT.length + x.doneH.length) + '  Streak: ' + streak() + ' days';
+}
+function taskText(t) {
+  return t.title + (t.due ? '\nDue: ' + relDay(t.due) + (t.time ? ' at ' + fmtTime(t.time) : '') : '') + (t.note ? '\nNote: ' + t.note : '') + ((t.steps || []).length ? '\n' + t.steps.map(s => (s.done ? '[x] ' : '[ ] ') + s.t).join('\n') : '') + '\nSent from Ticic';
+}
+/* voice */
+async function voiceAdd() {
+  const inp = $('#qa-in'); if (!inp) return; const fill = tx => { if (!tx) return; inp.value = tx.charAt(0).toUpperCase() + tx.slice(1); inp.dispatchEvent(new Event('input', { bubbles: true })); inp.focus(); };
+  const nv = PL('TicicVoice'); if (nv) { try { const r = await nv.listen(); if (r && r.text) fill(r.text); else toast('Did not catch that. Try again.'); } catch (e) { toast('Voice is not available. Use your keyboard mic.'); inp.focus(); } return; }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (SR) { try { const r = new SR(); r.lang = navigator.language || 'en-IN'; r.onresult = e => fill(e.results[0][0].transcript); r.onerror = () => toast('Voice is not available. Use your keyboard mic.'); r.start(); toast('Listening...'); return; } catch (e) {} }
+  inp.focus(); toast('Tap the mic on your keyboard and speak');
+}
+window.__ticicQuick = k => { try { openQuickAdd(); if (k === 'voice') setTimeout(voiceAdd, 600); } catch (e) {} };
+document.addEventListener('visibilitychange', () => { if (!document.hidden) focTick(); });
+Object.assign(ACT, {
+  tools() { openTools(); },
+  'acc-set'(el) { S.accent = el.dataset.v; save(); applyAccent(); chipSelect(el); cloudPush(); },
+  'cal-open'() { openCal(0); }, 'cal-nav'(el) { openCal(CAL + Number(el.dataset.o)); },
+  'cal-day'(el) { V.day = el.dataset.d; V.view = 'today'; closeSheet(); render(); },
+  'hab-open'() { openHabits(); },
+  'foc-open'() { openFocus(null); },
+  'foc-set'(el) { if (FOC.run) return toast('Pause first'); FOC.min = Number(el.dataset.v); FOC.left = FOC.min * 60; chipSelect(el); focPaint(); },
+  'foc-go'() { if (FOC.run) { FOC.left = focLeft(); FOC.run = false; clearInterval(FOC.tmr); } else { FOC.end = Date.now() + FOC.left * 1000; FOC.run = true; clearInterval(FOC.tmr); FOC.tmr = setInterval(focTick, 500); buzz(15); } focPaint(); },
+  'foc-reset'() { FOC.run = false; clearInterval(FOC.tmr); FOC.left = FOC.min * 60; focPaint(); },
+  'td-focus'() { if (TD) { const id = TD.id; closeSheet(); setTimeout(() => openFocus(id), 320); } },
+  'td-share'() { const t = TD && taskById(TD.id); if (t) shareText(taskText(t), t.title); },
+  'td-photo'() { const i = $('#td-photo-in'); if (i) i.click(); },
+  'td-photo-rm'() { if (TD) { store.set('ticic.ph.' + TD.id, ''); tdPhoto(TD.id); } },
+  mood(el) { S.mood = S.mood || {}; S.mood[today()] = Number(el.dataset.v); save(); render(); toast('Saved. Thanks for checking in.'); },
+  'bd-open'() { openBday(); },
+  'bd-set'(el) { BD[el.dataset.f] = el.dataset.v; if (el.dataset.f === 'kind') BD.rep = el.dataset.v === 'bill' ? 'monthly' : 'yearly'; bdPaint(); },
+  'bd-pre'(el) { const v = Number(el.dataset.v), i = BD.pre.indexOf(v); if (i < 0) BD.pre.push(v); else BD.pre.splice(i, 1); bdPaint(); },
+  'bd-save'() { bdSave(); },
+  'mc-open'() { openCourse(); },
+  'mc-set'(el) { const f = el.dataset.f, v = el.dataset.v; if (f === 'per') { MC.per = Number(v); MC.t = (MC_DEF[MC.per] || MC_DEF[2]).concat(['20:00', '20:00']); } else if (f === 'days') MC.days = Number(v); else MC.start = v; mcPaint(); },
+  'mc-save'() { mcSave(); },
+  'mc-stop'(el) { const id = el.dataset.id; S.tasks = S.tasks.filter(t => !(t.course === id && !t.done)); commit(); mcPaint(); toast('Course stopped'); },
+  'share-today'() { shareText(planText(), 'My plan'); },
+  'exp-open'() { openExport(); },
+  async 'exp-copy'() { const ta = $('#x-csv'); toast((await copyText(ta.value, ta)) ? 'Copied' : 'Select the text and copy it'); },
+  'exp-share'() { shareText($('#x-csv').value, 'Ticic tasks'); },
+  'qa-mic'() { voiceAdd(); }
+});
+
 function boot() {
-  load(); if (!S.firstRun) { S.firstRun = Date.now(); } V.day = today(); V.anim = true; runSplash(!S.onboarded);
+  load(); try { applyAccent(); } catch (e) {} if (!S.firstRun) { S.firstRun = Date.now(); } V.day = today(); V.anim = true; runSplash(!S.onboarded);
   if (lockEnabled()) { showLock(true); BIO.check().then(ok => { if (ok && S.bioOn && $('#lock').classList.contains('on') && LOCK.mode === 'pad') { $('#lock').innerHTML = lockHtml(); setTimeout(lockBio, 300); } }); } else BIO.check();
   render();
   try { if ((navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4) || (navigator.deviceMemory && navigator.deviceMemory <= 3)) document.documentElement.classList.add('lite'); } catch (e) {}

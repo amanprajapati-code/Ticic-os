@@ -410,24 +410,13 @@ textarea:focus{border-color:rgb(var(--blue))}
 .ferr{min-height:22px;margin:8px 4px 0;font-size:13.5px;font-weight:500;color:#D9402F}
 .fld.shake{animation:shake .45s}
 .pst.prof{margin-bottom:8px}
-#splash{position:fixed;inset:0;z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(180deg,#3A86FF 0%,#0B5BE0 60%,#063A9C 100%);color:#fff;transition:opacity .5s var(--apple),transform .5s var(--apple)}
-#splash.out{opacity:0;transform:scale(1.06);pointer-events:none}
-.spl{position:relative;width:150px;height:150px;display:grid;place-items:center}
-.slogo{position:relative;width:118px;height:118px;border-radius:34px;background:#fff;display:grid;place-items:center;box-shadow:0 24px 50px -16px rgba(0,20,80,.7);opacity:0;transform:scale(.55) rotate(-8deg);animation:spop .9s var(--spring) .15s forwards}
-.slogo img{width:74px;height:74px;object-fit:contain}
-.sring{position:absolute;inset:6px;border-radius:38px;border:2px solid rgba(255,255,255,.75);opacity:0;animation:sring 1.8s ease-out .5s infinite}
-.sring.b{animation-delay:1.1s}
-.sname{margin-top:30px;font-size:34px;font-weight:700;letter-spacing:-.04em;opacity:0;transform:translateY(14px);animation:srise .7s var(--apple) .55s forwards}
-.stag{margin-top:8px;font-size:15px;opacity:0;animation:sfade .8s ease .9s forwards}
-.sdots{margin-top:34px;display:flex;gap:8px;opacity:0;animation:sfade .5s ease 1s forwards}
-.sdots i{width:7px;height:7px;border-radius:50%;background:#fff;opacity:.5;animation:sdot 1s ease-in-out infinite}
-.sdots i:nth-child(2){animation-delay:.15s}.sdots i:nth-child(3){animation-delay:.3s}
-@keyframes spop{0%{opacity:0;transform:scale(.55) rotate(-8deg)}100%{opacity:1;transform:none}}
-@keyframes sring{0%{opacity:.8;transform:scale(1)}100%{opacity:0;transform:scale(1.7)}}
-@keyframes srise{to{opacity:1;transform:none}}
-@keyframes sfade{to{opacity:.9}}
-@keyframes sdot{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(-6px);opacity:1}}
-@media (prefers-reduced-motion:reduce){.sring,.sdots i{animation:none}}
+#splash{position:fixed;inset:0;z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(180deg,#3A86FF 0%,#0B5BE0 60%,#063A9C 100%);color:#fff;transition:opacity .28s ease-out;will-change:opacity}
+#splash.out{opacity:0;pointer-events:none}
+.slogo{width:108px;height:108px;border-radius:32px;background:#fff;display:grid;place-items:center;box-shadow:0 20px 40px -16px rgba(0,20,80,.65);opacity:0;transform:scale(.8);animation:spop .38s cubic-bezier(.2,.9,.3,1.15) .03s forwards}
+.slogo img{width:70px;height:70px;object-fit:contain}
+.sname{margin-top:22px;font-size:32px;font-weight:700;letter-spacing:-.04em;opacity:0;animation:sfade .3s ease-out .18s forwards}
+@keyframes spop{to{opacity:1;transform:none}}
+@keyframes sfade{to{opacity:1}}
 .avatar img,.pfbig img{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block}
 .avatar{overflow:hidden}
 .pfrow{display:flex;align-items:center;gap:14px;margin:4px 0 14px}
@@ -545,7 +534,7 @@ textarea:focus{border-color:rgb(var(--blue))}
 .prow em{font-style:normal;font-size:12.5px;color:var(--mu)}
 .lite *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}.lite .glass{background:rgba(255,255,255,.92)!important}.lite .rise{animation-duration:.2s!important}
 .wk{display:flex;align-items:stretch;gap:8px}.wk .wb i{background:#BFD6FB}.wk .wb.now i{background:#0B5FD8}.wk .wb em{color:#5B6B8C}
-</style></head><body>
+</style></head><body><div id="splash" aria-hidden="true"><div class="slogo" id="slogo"></div><div class="sname">Ticic</div></div>
 <div class="blobs" aria-hidden="true"><i></i><i></i><i></i></div>
 <div id="app"><div id="warn"></div><main id="view"></main></div>
 <nav id="nav" aria-label="Main">
@@ -555,7 +544,7 @@ textarea:focus{border-color:rgb(var(--blue))}
 <button type="button" class="tab" data-tab="guide"><svg class="ic" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg><span>Guide</span></button>
 <button type="button" class="tab" data-tab="lists"><svg class="ic" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M9 6h12M9 12h12M9 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg><span>Lists</span></button>
 </nav>
-<div id="sheets"></div><div id="toast" role="status" aria-live="polite"></div><div id="banner" aria-live="assertive"></div><div id="onb"></div><div id="lock"></div><div id="call"></div><div id="splash" aria-hidden="true"></div>
+<div id="sheets"></div><div id="toast" role="status" aria-live="polite"></div><div id="banner" aria-live="assertive"></div><div id="onb"></div><div id="lock"></div><div id="call"></div>
 <script src="config.js"></script>
 <script>(function(){
 "use strict";
@@ -2473,21 +2462,31 @@ document.addEventListener('focusin', e => { if (e.target.closest && e.target.clo
 try { if (window.TicicInsets) { const a = window.TicicInsets.get().split(',').map(Number); window.__setInsets(a[0], a[1], a[2]); } } catch (e) {}
 
 /* ---------- boot ---------- */
+let SPL_AT = Date.now();
 function runSplash(first) {
   const sp = $('#splash'); if (!sp) return;
-  sp.innerHTML = '<div class="spl"><span class="sring"></span><span class="sring b"></span><span class="slogo">' + logoImg('') + '</span></div><div class="sname">Ticic</div><div class="stag">Never forget the little things</div><div class="sdots"><i></i><i></i><i></i></div>';
-  setTimeout(() => { sp.classList.add('out'); setTimeout(() => { sp.remove(); }, 600); }, first ? 2300 : 1500);
+  const lg = $('#slogo'); if (lg) lg.innerHTML = logoImg('');
+  SPL_AT = Date.now();
+}
+function endSplash(first) {
+  const sp = $('#splash'); if (!sp) return;
+  const min = document.documentElement.classList.contains('lite') ? 250 : (first ? 650 : 420), wait = Math.max(0, min - (Date.now() - SPL_AT));
+  setTimeout(() => { requestAnimationFrame(() => { sp.classList.add('out'); setTimeout(() => sp.remove(), 320); }); }, wait);
 }
 function boot() {
   load(); if (!S.firstRun) { S.firstRun = Date.now(); } V.day = today(); V.anim = true; runSplash(!S.onboarded);
   if (lockEnabled()) { showLock(true); BIO.check().then(ok => { if (ok && S.bioOn && $('#lock').classList.contains('on') && LOCK.mode === 'pad') { $('#lock').innerHTML = lockHtml(); setTimeout(lockBio, 300); } }); } else BIO.check();
   render();
   try { if ((navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4) || (navigator.deviceMemory && navigator.deviceMemory <= 3)) document.documentElement.classList.add('lite'); } catch (e) {}
-  NAT.init(onNative); nativeChrome();
-  CALLN.check().then(ok => { if (ok) { callPending(); syncNow(); } });
-  stepsRefresh(); setInterval(() => { if (!document.hidden && !V.sheet) stepsRefresh(); }, 60000);
-  NAT.status().then(s => { NAT_state = V.notif = s; render(); if (s === 'granted') syncNow(); else setTimeout(autoAsk, 900); });
+  nativeChrome();
   if (!S.onboarded) openOnboarding(); else if (!S.profile && !S.noLogin) showProfileStep();
+  endSplash(!S.onboarded);
+  setTimeout(() => {
+    NAT.init(onNative);
+    CALLN.check().then(ok => { if (ok) { callPending(); syncNow(); } });
+    stepsRefresh(); setInterval(() => { if (!document.hidden && !V.sheet) stepsRefresh(); }, 60000);
+    NAT.status().then(s => { NAT_state = V.notif = s; if (s === 'granted') syncNow(); else setTimeout(autoAsk, 900); if (!V.sheet && !$('#lock.on')) render(); });
+  }, 60);
   tick(); setInterval(tick, 5000);
   document.addEventListener('visibilitychange', () => { if (document.hidden) wentAway(); else { cameBack(); tick(); syncNow(); callPending(); stepsRefresh(); } });
   window.__ticic = { S: () => S, tick, buildSchedule, parseQuick, commit, NAT, V, ACT, fired: () => fired };

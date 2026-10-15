@@ -22,7 +22,7 @@ jobs:
           mkdir -p www && cp index.html www/index.html
           if [ -f config.js ]; then cp config.js www/config.js; fi
           npm init -y
-          npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6 @capacitor/local-notifications@6 @capacitor/app@6 @capacitor/share@6 @capgo/capacitor-native-biometric@6
+          npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6 @capacitor/local-notifications@6 @capacitor/app@6 @capacitor/share@6 @capacitor/filesystem@6 @capgo/capacitor-native-biometric@6
           echo '{"appId":"com.ticic.daily","appName":"Ticic","webDir":"www","backgroundColor":"#1F6FEB","android":{"backgroundColor":"#1F6FEB","allowMixedContent":false,"webContentsDebuggingEnabled":false}}' > capacitor.config.json
           npx cap add android
           python3 - <<'PY'

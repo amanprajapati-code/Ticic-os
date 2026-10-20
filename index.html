@@ -353,10 +353,15 @@ textarea:focus{border-color:rgb(var(--blue))}
 .seg button.on{background:#0560E0;color:#fff;box-shadow:0 8px 16px -8px rgba(5,96,224,.7)}
 .go{justify-content:flex-start;padding:6px;background:#0B1220!important;box-shadow:0 16px 26px -12px rgba(0,10,40,.7)!important}
 .go .arr{touch-action:none;cursor:grab;position:relative;z-index:1;transition:transform .45s var(--apple);width:46px;height:46px;border-radius:50%;background:#fff;color:#0B1220;display:grid;place-items:center}
+.btn.go,.btn.big.go{padding:6px!important;min-height:58px!important;overflow:hidden}
+.go .arr{will-change:transform;flex:none;margin:0}
 .go .arr svg{transform:rotate(180deg)}
 .go .gt{flex:1;text-align:center;padding-right:46px;opacity:calc(1 - var(--p,0)*1.1);transition:opacity .2s}
 .go.drag .arr{transition:none;cursor:grabbing}
 .go.drag{touch-action:none}
+.rcbox{font:700 26px/1 Inter,system-ui,sans-serif;letter-spacing:.08em;text-align:center;padding:20px 8px;margin:0 0 12px;border-radius:18px;background:rgba(11,42,91,.07);color:var(--tx);user-select:all}
+.lforgot2{display:block;margin:14px auto 4px;font-weight:600}
+.ustat{min-height:18px;margin:-6px 4px 8px;font-size:12.5px;color:var(--mu2);text-align:left}.ustat.ok{color:#0a8f4e}.ustat.bad{color:#d92d20}
 .fine{display:block;text-align:center;font-size:12.5px;color:var(--mu2);margin-top:8px}
 .floaters{position:relative;height:240px;margin-bottom:6px}
 .fc{--c:var(--pink);position:absolute;display:flex;flex-direction:column;gap:3px;width:70%;padding:14px 16px 14px 46px;border-radius:26px;background:linear-gradient(rgba(var(--c),.35),rgba(var(--c),.35)),rgba(255,255,255,.7);border:1px solid #fff;box-shadow:0 18px 34px -16px rgba(10,60,160,.6);animation:bob 6s ease-in-out infinite}
@@ -487,6 +492,7 @@ textarea:focus{border-color:rgb(var(--blue))}
 .csn{height:50px;padding:0 26px;border-radius:999px;background:rgba(255,255,255,.18);color:#fff;font-weight:600;font-size:16px}
 .cgo{width:100%;background:rgba(255,255,255,.2)!important;box-shadow:none!important;color:#fff}
 .cgo .arr{background:#fff;color:#0B5BE0}
+.cgo,.btn.big.cgo{width:calc(100% + 24px)!important;margin-left:-12px;margin-right:-12px;min-height:78px!important;padding:8px!important;font-size:19px}.cgo .arr{width:62px!important;height:62px!important}.cgo .arr svg{width:26px;height:26px}.cgo .gt{padding-right:62px;font-weight:700;letter-spacing:.2px}
 @media (prefers-reduced-motion:reduce){.cav i{animation:none}}
 #lock{position:fixed;inset:0;z-index:90;display:none;background:linear-gradient(180deg,#4F9BFF 0%,#8FC0FF 36%,#D7E8FF 70%,#F3F8FF 100%);opacity:0;transition:opacity .5s var(--apple);overflow-y:auto}
 #lock.on{display:block}
@@ -616,6 +622,16 @@ html.booting .rise,html.booting .fab{animation-play-state:paused}
 .aidots{display:inline-flex;gap:5px}.aidots i{width:7px;height:7px;border-radius:50%;background:rgba(11,42,91,.35);animation:aid 1s infinite}.aidots i:nth-child(2){animation-delay:.15s}.aidots i:nth-child(3){animation-delay:.3s}
 @keyframes aid{40%{transform:translateY(-5px);background:rgb(var(--blue))}}
 .aiin{display:flex;align-items:center;gap:8px;margin-top:8px}.aimic{background:rgb(var(--blue));color:#fff;flex:none}.aisend{flex:none}
+
+.aifab{position:fixed;right:16px;bottom:calc(92px + var(--sab));z-index:19;width:56px;height:56px;border-radius:50%;display:grid;place-items:center;color:#fff;background:radial-gradient(circle at 30% 24%,#7FB8FF 0,#1D6DF0 42%,#0A2F8C 100%);box-shadow:0 0 0 4px rgba(255,255,255,.9),0 14px 24px -8px rgba(5,60,200,.75);animation:aifin .7s var(--spring) .5s both;transition:transform .3s var(--spring)}
+.aifab:active{transform:scale(.88)}
+.aifab{touch-action:none;-webkit-user-select:none;user-select:none}.aifab.dragging{transform:scale(1.12)!important;animation:none!important;box-shadow:0 0 0 4px rgba(255,255,255,.9),0 22px 34px -8px rgba(5,60,200,.8)}.aifab.dragging::after{display:none}
+.aifab::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:2px solid rgba(47,134,255,.55);opacity:0;animation:aifp 4.5s ease-out 2s infinite;pointer-events:none}
+@keyframes aifin{from{opacity:0;transform:scale(.5) translateY(16px)}to{opacity:1;transform:none}}
+@keyframes aifp{0%{opacity:.8;transform:scale(1)}70%,100%{opacity:0;transform:scale(1.45)}}
+.lite .aifab::after{animation:none}
+html.booting .aifab{animation-play-state:paused}
+@media (max-height:620px){.aifab{width:50px;height:50px;bottom:calc(86px + var(--sab))}}
 </style></head><body><div id="splash" aria-hidden="true"><div class="slogo" id="slogo"></div><div class="sname">Ticic</div></div>
 <div class="blobs" aria-hidden="true"><i></i><i></i><i></i></div>
 <div id="app"><div id="warn"></div><main id="view"></main></div>
@@ -623,10 +639,10 @@ html.booting .rise,html.booting .fab{animation-play-state:paused}
 <button type="button" class="tab" data-tab="today"><svg class="ic" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M3 11l9-8 9 8v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z"/></svg><span>Today</span></button>
 <button type="button" class="tab" data-tab="upcoming"><svg class="ic" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span>Upcoming</span></button>
 <button type="button" class="fab" data-act="add" aria-label="Add a task"><svg class="ic" viewBox="0 0 24 24" width="28" height="28" aria-hidden="true" style="stroke-width:2.6"><path d="M12 5v14M5 12h14"/></svg></button>
-<button type="button" class="tab" data-tab="guide"><svg class="ic" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg><span>Guide</span></button>
+<button type="button" class="tab" data-act="tools" aria-label="More tools"><svg class="ic" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg><span>Tools</span></button>
 <button type="button" class="tab" data-tab="lists"><svg class="ic" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M9 6h12M9 12h12M9 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg><span>Lists</span></button>
 </nav>
-<div id="sheets"></div><div id="toast" role="status" aria-live="polite"></div><div id="banner" aria-live="assertive"></div><div id="onb"></div><div id="lock"></div><div id="call"></div>
+<button type="button" id="aifab" class="aifab" data-act="ai-open" aria-label="Ticic AI assistant"><svg viewBox="0 0 48 48" width="30" height="30" aria-hidden="true"><path d="M24 5C13.5 5 5 12.6 5 22c0 5.1 2.5 9.6 6.4 12.6L10 43l8.1-3.6c1.9.4 3.9.6 5.9.6 10.5 0 19-7.6 19-17S34.5 5 24 5z" fill="#fff"/><path d="M24 12.5c.9 4.9 3 7 7.9 7.9-4.9.9-7 3-7.9 7.9-.9-4.9-3-7-7.9-7.9 4.9-.9 7-3 7.9-7.9z" fill="url(#aig)"/><circle cx="33.5" cy="27.5" r="2" fill="url(#aig)"/><circle cx="14.5" cy="27.5" r="1.500" fill="url(#aig)" opacity=".7"/><defs><linearGradient id="aig" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2F86FF"/><stop offset="1" stop-color="#0449B8"/></linearGradient></defs></svg></button><div id="sheets"></div><div id="toast" role="status" aria-live="polite"></div><div id="banner" aria-live="assertive"></div><div id="onb"></div><div id="lock"></div><div id="call"></div>
 <script src="config.js"></script>
 <script>(function(){
 "use strict";
@@ -1071,7 +1087,7 @@ function viewToday() {
   const hero = queue[0], rest = queue.slice(1);
   let i = 0;
   let h = '<header class="top rise" style="--i:0"><div class="who"><button type="button" class="avatar" data-act="settings" aria-label="Settings and reminders">' + avatarIn() + '</button><div class="wt"><b>' + esc(S.name || 'You') + '</b><small>' + WDL[dt.getDay()] + ', ' + dt.getDate() + ' ' + MONL[dt.getMonth()] + '</small></div></div>' +
-    '<div class="tools"><button type="button" class="round" data-act="tools" aria-label="More tools">' + ic('grid', 20) + '</button><button type="button" class="round" data-act="ai-open" aria-label="Ask Ticic AI">' + ic('spark', 20) + '</button><button type="button" class="round" data-act="notifs" aria-label="Notifications">' + ic('bell', 20) + (V.notif !== 'granted' ? '<span class="dot"></span>' : '') + '</button></div></header>';
+    '<div class="tools"><button type="button" class="round" data-tab="guide" aria-label="Guide">' + ic('target', 20) + '</button><button type="button" class="round" data-tab="upcoming" aria-label="Upcoming tasks">' + ic('cal', 20) + '</button><button type="button" class="round" data-act="notifs" aria-label="Notifications">' + ic('bell', 20) + (V.notif !== 'granted' ? '<span class="dot"></span>' : '') + '</button></div></header>';
   h += '<h1 class="hi rise" style="--i:1">' + (x.isT ? '<b>Hi ' + esc(S.name || 'there') + ',</b> <span class="soft">' + greeting().toLowerCase() + '!</span>' : '<b>' + esc(relDay(d)) + ',</b> <span class="soft">' + x.pend.length + ' planned</span>') + '</h1>';
   h += '<div class="days rise" style="--i:2" role="group" aria-label="Pick a day">';
   for (let k = 0; k < 7; k++) {
@@ -1375,7 +1391,7 @@ function openOnboarding() {
   const o = $('#onb');
   o.innerHTML = '<div class="onbin"><div class="brand">' + logoImg('blogo') + '<b>Ticic</b></div><div class="floaters" aria-hidden="true"><div class="fc" style="--c:' + COL.pink + '"><i></i><b>Take vitamins</b><span>8:00 PM</span></div><div class="fc" style="--c:' + COL.amber + '"><i></i><b>Call mom</b><span>8:30 PM</span></div><div class="fc" style="--c:' + COL.cyan + '"><i></i><b>Pay electricity bill</b><span>Today</span></div></div>' +
     '<h1>Never forget the little things.</h1><p>Type a task in one line. We nudge you at exactly the right moment, with the tone you pick.</p>' +
-    '<button type="button" class="btn glow big go" data-act="o-next"><span class="arr">' + ic('back', 20) + '</span><span class="gt">Get started</span></button><span class="fine">Takes less than a minute. Everything stays on your phone.</span></div>';
+    '<button type="button" class="btn glow big go" data-act="o-next"><span class="arr">' + ic('back', 20) + '</span><span class="gt">Get started</span></button><button type="button" class="btn plain wide" data-act="o-mode" data-v="login">I already have an account. Log in</button></div>';
   o.classList.add('on'); void o.offsetWidth; o.classList.add('show');
 }
 function closeOnboarding() { const o = $('#onb'); o.classList.remove('show'); setTimeout(() => { o.classList.remove('on'); o.innerHTML = ''; autoAsk(); }, 700); }
@@ -1401,6 +1417,60 @@ async function pinHash(salt, pin) {
   catch (e) { return 'h' + hash(salt + ':' + pin); }
 }
 const digits = s => String(s || '').replace(/\D/g, '');
+/* username accounts: profile.cc is '' and profile.phone holds the username. Older accounts keep a mobile number. */
+const normUser = s => String(s || '').trim().toLowerCase().replace(/^@/, '');
+const checkUser = u => /^[a-z0-9._]{3,20}$/.test(u) && /[a-z]/.test(u);
+const goodPass = a => a.length >= 6 && a.length <= 32;
+function parseId(raw) { const n = normUser(raw), d = n.replace(/[\s-]/g, ''); if (/^\+?\d{7,13}$/.test(d)) return { cc: '+91', id: digits(d), legacy: true }; return { cc: '', id: n, legacy: false }; }
+/* true = username exists online, false = free, null = cannot tell */
+async function userExists(cc, id) {
+  if (!cloudOn()) return null;
+  try { const r = await cloudCall('ticic_exists', { p_phone: cc + id }); return r === true ? true : r === false ? false : null; } catch (e) { return null; }
+}
+let UCHK = { t: 0, n: 0 };
+function ustat(msg, kind) { const e = $('#o-ustat'); if (!e) return; e.textContent = msg; e.className = 'ustat' + (kind ? ' ' + kind : ''); }
+function ucheck() {
+  clearTimeout(UCHK.t); const i = $('#o-phone'); if (!i) return;
+  const login = PMODE !== 'signup', raw = i.value, pid = parseId(raw), u = pid.id, my = ++UCHK.n;
+  if (!login) { if (!u) return ustat('Letters, numbers, dot and underscore. 3 to 20 characters.', ''); if (!checkUser(u)) return ustat(u.length < 3 ? 'Keep typing. At least 3 characters.' : 'Use letters, numbers, dot or underscore, with at least one letter.', 'bad'); }
+  else if (u.length < 3) return ustat('', '');
+  if (!cloudOn()) return ustat(login ? '' : 'Username looks good.', login ? '' : 'ok');
+  const p = S.profile; if (p && pid.cc === p.cc && u === p.phone) return ustat(login ? '' : 'You already use this username on this phone.', '');
+  ustat('Checking...', '');
+  UCHK.t = setTimeout(async () => {
+    const ex = await userExists(pid.cc, u); if (my !== UCHK.n) return;
+    if (ex === null) return ustat(login ? '' : 'Username looks good.', login ? '' : 'ok');
+    if (login) ustat(ex ? 'Account found.' : 'No account with this username.', ex ? 'ok' : 'bad');
+    else ustat(ex ? 'This username is not available. Try another.' : 'This username is available.', ex ? 'bad' : 'ok');
+  }, 450);
+}
+document.addEventListener('input', e => { if (e.target && e.target.id === 'o-phone') ucheck(); });
+/* recovery code: lets someone who forgot the password set a new one, with no SMS or email */
+const rcNew = () => { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', b = crypto.getRandomValues(new Uint8Array(12)); let c = ''; b.forEach(x => { c += A[x % 32]; }); return c.replace(/(.{4})(?=.)/g, '$1-'); };
+const rcNorm = c => String(c || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+const rcHash = (full, code) => cloudHash(full + '#rc', rcNorm(code));
+async function rcCreate() {
+  const p = S.profile; if (!cloudOn() || !p || !p.ck) return null;
+  const code = rcNew(), rh = await rcHash(fullPhone(p), code);
+  const r = await cloudCall('ticic_set_recovery', { p_phone: fullPhone(p), p_hash: p.ck, p_rhash: rh });
+  return r === 'ok' ? code : null;
+}
+function openRecoverySheet(code) {
+  V.sheet = 'rc';
+  openSheet('<div class="shead"><h2>Your recovery code</h2><button type="button" class="link" data-act="sheet-close">Done</button></div>' +
+    '<p class="fine" style="text-align:left;font-size:14px;margin:0 0 12px">If you forget your password, this code lets you set a new one. Take a screenshot or write it down. It is shown only once.</p>' +
+    '<div class="rcbox" id="rc-code">' + esc(code) + '</div><div class="btnrow"><button type="button" class="btn ghost sm" data-act="rc-copy" data-v="' + esc(code) + '">Copy</button><button type="button" class="btn ghost sm" data-act="rc-share" data-v="' + esc(code) + '">Share</button></div>' +
+    '<button type="button" class="btn glow big" data-act="sheet-close">I saved it</button>');
+}
+async function rcAfterSignup() {
+  if (!cloudOn() || !S.profile || !S.profile.ck) return;
+  try {
+    await cloudCall('ticic_push', { p_phone: fullPhone(S.profile), p_hash: S.profile.ck, p_data: cloudPayload() });
+    const c = await rcCreate(); if (c) setTimeout(() => openRecoverySheet(c), 700);
+  } catch (e) {}
+}
+const isTxt = () => !!(S.profile && S.profile.pl === 'txt');
+const plOf = (cc, pin) => (cc || !/^\d{4}$/.test(pin)) ? 'txt' : undefined;
 
 /* ----- online account (Supabase) so you can log in again after reinstalling ----- */
 const CLOUD = window.TICIC_CLOUD || {};
@@ -1442,26 +1512,30 @@ function restoreFrom(d) {
 }
 
 const lockEnabled = () => !!(S.profile && S.lockOn === true);
-const maskPhone = () => { const p = S.profile; if (!p) return ''; const d = p.phone; return (p.cc || '+91') + ' ' + d.slice(0, 2) + '••••' + d.slice(-2); };
-const FIELD_password = (id, ph) => '<div class="fld full"><input id="' + id + '" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" data-digits="4" autocomplete="off" placeholder="' + ph + '"></div>';
+const maskPhone = () => { const p = S.profile; if (!p) return ''; if (!p.cc) return '@' + p.phone; const d = p.phone; return (p.cc || '+91') + ' ' + d.slice(0, 2) + '••••' + d.slice(-2); };
+const FIELD_password = (id, ph) => '<div class="fld full"><input id="' + id + '" type="password" maxlength="32" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="' + ph + '"></div>';
 function checkPhone(cc, ph) { return /^\+\d{1,3}$/.test(cc) && ph.length >= 7 && ph.length <= 12; }
 
 /* ----- onboarding step 2: create profile ----- */
 let PMODE = 'signup';
 function showProfileStep(mode) {
   if (typeof mode === 'string') PMODE = mode;
-  const o = $('#onb'), login = PMODE === 'login';
+  const o = $('#onb'), reset = PMODE === 'reset', login = PMODE === 'login' || reset;
   const seg = '<div class="seg" role="tablist"><button type="button" role="tab" aria-selected="' + !login + '" class="' + (login ? '' : 'on') + '" data-act="o-mode" data-v="signup">Sign up</button><button type="button" role="tab" aria-selected="' + login + '" class="' + (login ? 'on' : '') + '" data-act="o-mode" data-v="login">Log in</button></div>';
-  const phone = '<div class="flab"><label for="o-phone">Mobile number</label></div><div class="ccrow"><div class="fld cc"><input id="o-cc" type="text" value="+91" inputmode="tel" aria-label="Country code" maxlength="4"></div><div class="fld full grow"><input id="o-phone" type="tel" inputmode="numeric" data-digits="12" placeholder="Mobile number" autocomplete="tel-national"></div></div>';
+  const phone = '<div class="flab"><label for="o-phone">' + (login ? 'Username' : 'Choose a username') + '</label></div><div class="fld full"><input id="o-phone" type="text" maxlength="20" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username" placeholder="Username"></div><div class="ustat' + (login ? '' : '') + '" id="o-ustat" aria-live="polite">' + (login ? '' : 'Letters, numbers, dot and underscore. 3 to 20 characters.') + '</div>';
   const skip = '<button type="button" class="btn ghost wide" data-act="' + (S.onboarded ? 'o-cancel' : 'o-nologin') + '">' + (S.onboarded ? 'Not now' : 'Continue without login') + '</button><span class="fine">Login is optional. You can set it up later in Reminders.</span></div>';
-  o.innerHTML = '<div class="onbin form"><div class="brand">' + logoImg('blogo') + '<b>Ticic</b></div>' + seg + (login ?
-    '<h1>Welcome back</h1><p>Log in with the mobile number and password you signed up with.</p>' + (cloudOn() ? '' : '<p class="hint">Online accounts are off in this app. Login works only for the account made on this phone.</p>') + phone +
-    '<div class="flab"><label for="o-pin">Password</label></div>' + FIELD_password('o-pin', '4-digit password') +
-    '<div class="ferr" id="o-err" role="alert"></div><button type="button" class="btn glow big go" data-act="o-login"><span class="arr">' + ic('back', 20) + '</span><span class="gt">Slide to log in</span></button>' + skip
+  const RESET = '<h1>Forgot your password?</h1><p>Enter your username, the recovery code you saved, and a new password.</p>' + phone +
+    '<div class="flab"><label for="o-rc">Recovery code</label></div><div class="fld full"><input id="o-rc" type="text" maxlength="14" autocapitalize="characters" autocorrect="off" spellcheck="false" autocomplete="off" placeholder="XXXX-XXXX-XXXX"></div>' +
+    '<div class="flab"><label for="o-pin">New password</label></div>' + FIELD_password('o-pin', 'At least 6 characters') + '<div class="flab"><label for="o-pin2">New password again</label></div>' + FIELD_password('o-pin2', 'Repeat new password') +
+    '<div class="ferr" id="o-err" role="alert"></div><button type="button" class="btn glow big" data-act="o-reset">Save new password</button><button type="button" class="btn plain wide" data-act="o-mode" data-v="login">Back to log in</button><span class="fine">You get a recovery code when you sign up, and in Settings. Without it, an account cannot be recovered. Sign up again with a new username.</span></div>';
+  o.innerHTML = reset ? '<div class="onbin form"><div class="brand">' + logoImg('blogo') + '<b>Ticic</b></div>' + seg + RESET : '<div class="onbin form"><div class="brand">' + logoImg('blogo') + '<b>Ticic</b></div>' + seg + (login ?
+    '<h1>Welcome back</h1><p>Log in with your username and password.</p>' + (cloudOn() ? '' : '<p class="hint">Online accounts are off in this app. Login works only for the account made on this phone.</p>') + phone +
+    '<div class="flab"><label for="o-pin">Password</label></div>' + FIELD_password('o-pin', 'Password') +
+    '<div class="ferr" id="o-err" role="alert"></div><button type="button" class="btn glow big go" data-act="o-login"><span class="arr">' + ic('back', 20) + '</span><span class="gt">Slide to log in</span></button><button type="button" class="link lforgot2" data-act="o-mode" data-v="reset">Forgot password?</button>' + skip
     :
-    '<h1>Create your account</h1><p>Your mobile number is your login. Choose a 4-digit password you will remember.</p>' +
+    '<h1>Create your account</h1><p>Pick a username and a password. You will use them to log in again, even on a new phone.</p>' +
     '<div class="flab"><label for="o-name">Your name</label></div><div class="fld full"><input id="o-name" type="text" value="' + esc(S.name || '') + '" placeholder="Your name" autocomplete="given-name"></div>' + phone +
-    '<div class="flab"><label for="o-pin">Create a 4-digit password</label></div>' + FIELD_password('o-pin', '4-digit password') +
+    '<div class="flab"><label for="o-pin">Create a password</label></div>' + FIELD_password('o-pin', 'At least 6 characters') +
     '<div class="flab"><label for="o-pin2">Type the password again</label></div>' + FIELD_password('o-pin2', 'Repeat password') +
     '<div class="ferr" id="o-err" role="alert"></div>' +
     '<button type="button" class="btn glow big go" data-act="o-enable"><span class="arr">' + ic('back', 20) + '</span><span class="gt">Slide to sign up</span></button><button type="button" class="btn plain" data-act="o-skip">Sign up without reminders</button>' + skip);
@@ -1469,26 +1543,27 @@ function showProfileStep(mode) {
 }
 function onbError(msg, id) { const e = $('#o-err'); if (e) e.textContent = msg; const i = $('#' + id); if (i) { i.focus(); const f = i.closest('.fld'); if (f) { f.classList.remove('shake'); void f.offsetWidth; f.classList.add('shake'); } } }
 async function submitProfile(ask) {
-  const name = $('#o-name').value.trim(), cc = ($('#o-cc').value.trim() || '+91').replace(/^(\d)/, '+$1'), ph = digits($('#o-phone').value), pin = $('#o-pin').value, pin2 = $('#o-pin2').value;
+  const name = $('#o-name').value.trim(), cc = '', ph = normUser($('#o-phone').value), pin = $('#o-pin').value, pin2 = $('#o-pin2').value;
   if (!name) return onbError('Enter your name.', 'o-name');
-  if (!checkPhone(cc, ph)) return onbError('Enter a valid mobile number, 7 to 12 digits.', 'o-phone');
-  if (!/^\d{4}$/.test(pin)) return onbError('The password must be exactly 4 digits.', 'o-pin');
+  if (!checkUser(ph)) return onbError('Username: 3 to 20 letters, numbers, dot or underscore, with at least one letter.', 'o-phone');
+  if (!goodPass(pin)) return onbError('The password needs 6 to 32 characters.', 'o-pin');
   if (pin !== pin2) return onbError('The two passwords do not match.', 'o-pin2');
   let ck = null;
   if (cloudOn()) {
     const btn = $('[data-act="o-enable"]') || $('[data-act="o-skip"]'); if (btn) btn.disabled = true;
     try {
       ck = await cloudHash(cc + ph, pin);
-      const r = await cloudCall('ticic_pull', { p_phone: cc + ph, p_hash: ck });
-      if (r && r.s !== 'none') { if (btn) btn.disabled = false; return onbError('This number already has an account. Tap Log in above.', 'o-phone'); }
+      const ex = await userExists(cc, ph);
+      if (ex === true) { if (btn) btn.disabled = false; ustat('This username is not available. Try another.', 'bad'); return onbError('This username is taken. Try another one.', 'o-phone'); }
+      if (ex === null) { const r = await cloudCall('ticic_pull', { p_phone: cc + ph, p_hash: ck }); if (r && r.s !== 'none') { if (btn) btn.disabled = false; return onbError('This username is taken. Try another one.', 'o-phone'); } }
     } catch (e) { /* offline: continue, it will back up later */ }
     if (btn) btn.disabled = false;
   }
   const salt = uid();
-  S.noLogin = false; S.name = name; S.profile = { cc, phone: ph, salt, pin: await pinHash(salt, pin), ck }; S.lockOn = false;
+  S.noLogin = false; S.name = name; S.profile = { cc, phone: ph, salt, pin: await pinHash(salt, pin), ck, pl: 'txt' }; S.lockOn = false;
   askedAuto = true; const first = !S.onboarded; S.onboarded = true;
   if (first && !S.tasks.length) addExamples();
-  closeOnboarding(); commit(); cloudPush(true);
+  closeOnboarding(); commit(); cloudPush(true); rcAfterSignup();
   toast('Welcome, ' + name);
   if (ask) { const s = await NAT.ask(); NAT_state = V.notif = s; render(); if (s === 'granted') { syncNow(); toast('Reminders are on'); } else if (s === 'denied') toast('Reminders are blocked in phone settings'); }
 }
@@ -1526,10 +1601,14 @@ let LOCK = { pin: '', fails: 0, until: 0, mode: 'pad', busy: false };
 function lockHtml() {
   const keys = [1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => '<button type="button" class="key" data-act="k" data-v="' + n + '" aria-label="' + n + '">' + n + '</button>').join('') +
     (bioOn() ? '<button type="button" class="key fp" data-act="lock-bio" aria-label="Unlock with fingerprint">' + ic('finger', 30) + '</button>' : '<span class="key ghost"></span>') + '<button type="button" class="key" data-act="k" data-v="0" aria-label="0">0</button><button type="button" class="key ghost" data-act="kdel" aria-label="Delete">' + ic('back', 26) + '</button>';
-  if (LOCK.mode === 'reset') return '<div class="lockin"><div class="lava">' + logoImg('llogo') + '</div><h2>Reset your password</h2><p class="lsub">Enter the mobile number you signed up with. No SMS is sent. The check happens on this phone.</p>' +
-    '<div class="lform"><div class="ccrow"><div class="fld cc"><span class="lcc">' + esc(S.profile.cc) + '</span></div><div class="fld full grow"><input id="lk-phone" type="tel" inputmode="numeric" data-digits="12" placeholder="Your mobile number" aria-label="Mobile number"></div></div>' +
-    FIELD_password('lk-pin', 'New 4-digit password') + FIELD_password('lk-pin2', 'Repeat new password') + '<div class="ferr" id="lk-err" role="alert"></div>' +
+  if (LOCK.mode === 'reset') return '<div class="lockin"><div class="lava">' + logoImg('llogo') + '</div><h2>Reset your password</h2><p class="lsub">Enter the username you signed up with. The check happens on this phone.</p>' +
+    '<div class="lform"><div class="fld full"><input id="lk-phone" type="text" autocapitalize="none" spellcheck="false" placeholder="' + (S.profile.cc ? 'Your mobile number' : 'Your username') + '" aria-label="Username"></div>' +
+    FIELD_password('lk-pin', 'New password, 6+ characters') + FIELD_password('lk-pin2', 'Repeat new password') + '<div class="ferr" id="lk-err" role="alert"></div>' +
     '<button type="button" class="btn glow big" data-act="lock-reset">Save new password</button><button type="button" class="btn plain" data-act="lock-back">Back</button></div></div>';
+  if (isTxt()) return '<div class="lockin"><div class="lava' + (S.photo ? ' ph' : '') + '">' + (S.photo ? '<img class="lphoto" src="' + S.photo + '" alt="">' : logoImg('llogo')) + '</div><h2>Welcome back, ' + esc(S.name || 'there') + '</h2><p class="lsub">' + esc(maskPhone()) + '</p>' +
+    '<div class="lform"><div class="fld full"><input id="lk-txt" type="password" maxlength="32" autocomplete="off" placeholder="Password" aria-label="Password"></div><div class="lmsg" id="lk-msg" role="alert">Enter your password</div>' +
+    '<button type="button" class="btn glow big" data-act="lock-txt">Unlock</button>' + (bioOn() ? '<button type="button" class="btn plain" data-act="lock-bio">Use fingerprint</button>' : '') + '</div>' +
+    '<button type="button" class="link lforgot" data-act="lock-forgot">Forgot password?</button></div>';
   return '<div class="lockin"><div class="lava' + (S.photo ? ' ph' : '') + '">' + (S.photo ? '<img class="lphoto" src="' + S.photo + '" alt="">' : logoImg('llogo')) + '</div><h2>Welcome back, ' + esc(S.name || 'there') + '</h2><p class="lsub">' + esc(maskPhone()) + '</p>' +
     '<div class="dots" id="lk-dots" role="status" aria-label="password digits entered"><i></i><i></i><i></i><i></i></div><div class="lmsg" id="lk-msg" role="alert">Enter your password</div><div class="keypad">' + keys + '</div>' +
     '<button type="button" class="link lforgot" data-act="lock-forgot">Forgot password?</button></div>';
@@ -1557,9 +1636,9 @@ const AUTH_ACT = {
   's-cloud'() { if (!cloudOn() || !S.profile || !S.profile.ck) return toast('Online saving is not on'); cloudPush(true); toast('Saving online...'); setTimeout(() => { if (V.sheet === 'settings') openSettings(); }, 1800); },
   'o-mode'(el) { showProfileStep(el.dataset.v); },
   async 'o-login'() {
-    const cc = ($('#o-cc').value.trim() || '+91').replace(/^(\d)/, '+$1'), ph = digits($('#o-phone').value), pin = $('#o-pin').value, p = S.profile;
-    if (!checkPhone(cc, ph)) return onbError('Enter a valid mobile number.', 'o-phone');
-    if (!/^\d{4}$/.test(pin)) return onbError('The password is 4 digits.', 'o-pin');
+    const pid = parseId($('#o-phone').value), cc = pid.cc, ph = pid.id, pin = $('#o-pin').value, p = S.profile;
+    if (!ph || ph.length < 3) return onbError('Enter your username.', 'o-phone');
+    if (!pin) return onbError('Enter your password.', 'o-pin');
     if (p && ph === p.phone && cc === p.cc) {
       if (await pinHash(p.salt, pin) !== p.pin) return onbError('Wrong password. Try again.', 'o-pin');
       if (cloudOn() && !p.ck) p.ck = await cloudHash(cc + ph, pin);
@@ -1569,16 +1648,57 @@ const AUTH_ACT = {
     if (!cloudOn()) return onbError('Online login is not switched on in this app, so a new phone cannot find your old account. Tap Sign up, then restore your backup in Settings.', 'o-phone');
     const g = $('[data-act="o-login"] .gt'); if (g) g.textContent = 'Checking...';
     let r, ck;
-    try { ck = await cloudHash(cc + ph, pin); r = await cloudCall('ticic_pull', { p_phone: cc + ph, p_hash: ck }); }
+    try {
+      const ex = await userExists(cc, ph);
+      if (ex === false) { if (g) g.textContent = 'Slide to log in'; ustat('No account with this username.', 'bad'); return onbError('No account with this username. Check the spelling, or tap Sign up.', 'o-phone'); }
+      ck = await cloudHash(cc + ph, pin); r = await cloudCall('ticic_pull', { p_phone: cc + ph, p_hash: ck });
+    }
     catch (e) { if (g) g.textContent = 'Slide to log in'; return onbError(navigator.onLine === false ? 'No internet. Connect and try again.' : 'Could not reach the account server. Try again in a minute.', 'o-phone'); }
     if (g) g.textContent = 'Slide to log in';
-    if (!r || r.s === 'none') return onbError('No saved account for this number. It may have been created before online login was on. Tap Sign up with the same number.', 'o-phone');
+    if (!r || r.s === 'none') return onbError('No account with this username. Check the spelling, or tap Sign up.', 'o-phone');
     if (r.s === 'locked') return onbError('Too many wrong tries. Try again in 15 minutes.', 'o-pin');
     if (r.s !== 'ok') return onbError('Wrong password. Try again.', 'o-pin');
     const salt = uid(); restoreFrom(r.data);
-    S.profile = { cc, phone: ph, salt, pin: await pinHash(salt, pin), ck }; S.lockOn = false; S.noLogin = false; S.onboarded = true; S.cloudAt = Date.now();
+    S.profile = { cc, phone: ph, salt, pin: await pinHash(salt, pin), ck, pl: plOf(cc, pin) }; S.lockOn = false; S.noLogin = false; S.onboarded = true; S.cloudAt = Date.now();
     closeOnboarding(); commit(); toast('Welcome back' + (S.name ? ', ' + S.name : '') + '. Your tasks are restored.');
   },
+  async 'o-reset'() {
+    const pid = parseId($('#o-phone').value), rc = rcNorm($('#o-rc').value), a = $('#o-pin').value, b = $('#o-pin2').value, full = pid.cc + pid.id;
+    if (!pid.id || pid.id.length < 3) return onbError('Enter your username.', 'o-phone');
+    if (rc.length !== 12) return onbError('Enter the 12-character recovery code.', 'o-rc');
+    if (!goodPass(a)) return onbError('The new password needs 6 to 32 characters.', 'o-pin');
+    if (a !== b) return onbError('The two passwords do not match.', 'o-pin2');
+    if (!cloudOn()) return onbError('Online accounts are not switched on in this app.', 'o-phone');
+    const btn = $('[data-act="o-reset"]'); if (btn) btn.disabled = true;
+    try {
+      const ex = await userExists(pid.cc, pid.id);
+      if (ex === false) { ustat('No account with this username.', 'bad'); return onbError('No account with this username.', 'o-phone'); }
+      const nk = await cloudHash(full, a), r = await cloudCall('ticic_reset', { p_phone: full, p_rhash: await rcHash(full, rc), p_new: nk });
+      if (r === 'norecovery') return onbError('This account has no recovery code, so it cannot be reset.', 'o-rc');
+      if (r === 'locked') return onbError('Too many wrong codes. Try again in 30 minutes.', 'o-rc');
+      if (r !== 'ok') return onbError('That recovery code is not right.', 'o-rc');
+      const g = await cloudCall('ticic_pull', { p_phone: full, p_hash: nk });
+      if (!g || g.s !== 'ok') return onbError('Password changed. Now log in with it.', 'o-pin');
+      const salt = uid(); restoreFrom(g.data);
+      S.profile = { cc: pid.cc, phone: pid.id, salt, pin: await pinHash(salt, a), ck: nk, pl: 'txt' }; S.lockOn = false; S.noLogin = false; S.onboarded = true; S.cloudAt = Date.now();
+      closeOnboarding(); commit(); toast('Password changed. Welcome back' + (S.name ? ', ' + S.name : ''));
+    } catch (e) { onbError(navigator.onLine === false ? 'No internet. Connect and try again.' : 'Could not reach the account server. Try again in a minute.', 'o-rc'); }
+    finally { if (btn) btn.disabled = false; }
+  },
+  's-rc'() {
+    if (!cloudOn() || !S.profile || !S.profile.ck) { closeAll(); return toast('Online saving is not on'); }
+    closeAll(); setTimeout(() => {
+      V.sheet = 'rc';
+      openSheet('<div class="shead"><h2>Recovery code</h2><button type="button" class="link" data-act="sheet-close">Cancel</button></div><p class="fine" style="text-align:left;font-size:14px;margin:0 0 12px">Make a new recovery code. Any older code stops working.</p><div class="flab"><label for="pn-cur">Your password</label></div>' + FIELD_password('pn-cur', 'Password') + '<div class="ferr" id="pn-err" role="alert"></div><button type="button" class="btn glow big" data-act="rc-make">Make my code</button>', 'tall');
+    }, 330);
+  },
+  async 'rc-make'() {
+    const err = t => { $('#pn-err').textContent = t; };
+    if (await pinHash(S.profile.salt, $('#pn-cur').value) !== S.profile.pin) return err('Your password is not right.');
+    try { const c = await rcCreate(); if (!c) return err('Could not make the code. Try again later.'); closeSheet(); setTimeout(() => openRecoverySheet(c), 330); } catch (e) { err('Connect to the internet and try again.'); }
+  },
+  async 'rc-copy'(el) { toast((await copyText(el.dataset.v, document.createElement('textarea'))) ? 'Code copied' : 'Could not copy'); },
+  'rc-share'(el) { shareText('My Ticic recovery code: ' + el.dataset.v, 'Ticic recovery code'); },
   'o-cancel'() { S.noLogin = true; save(); closeOnboarding(); },
   'o-nologin'() {
     const n = $('#o-name'); if (n && n.value.trim()) S.name = n.value.trim();
@@ -1594,6 +1714,15 @@ const AUTH_ACT = {
   },
   kdel() { if (LOCK.busy) return; LOCK.pin = LOCK.pin.slice(0, -1); lockDots(); },
   'lock-bio'() { lockBio(); },
+  async 'lock-txt'() {
+    if (LOCK.busy) return; const i = $('#lk-txt'); if (!i) return;
+    if (Date.now() < LOCK.until) { lockMsg('Too many tries. Wait ' + Math.ceil((LOCK.until - Date.now()) / 1000) + ' seconds.', true); return; }
+    LOCK.busy = true; const h = await pinHash(S.profile.salt, i.value);
+    if (h === S.profile.pin) { LOCK.fails = 0; LOCK.busy = false; $('.lockin') && $('.lockin').classList.add('ok'); setTimeout(hideLock, 160); return; }
+    LOCK.fails++; const f = i.closest('.fld'); if (f) { f.classList.remove('shake'); void f.offsetWidth; f.classList.add('shake'); }
+    if (LOCK.fails >= 5) { LOCK.until = Date.now() + 30000; LOCK.fails = 0; lockMsg('Too many tries. Wait 30 seconds.', true); } else lockMsg('Wrong password. Try again.', true);
+    i.value = ''; LOCK.busy = false;
+  },
   async 's-bio'(el) {
     if (S.bioOn) { S.bioOn = false; el.classList.remove('on'); el.setAttribute('aria-checked', 'false'); save(); toast('Fingerprint unlock is off'); return; }
     const ok = await BIO.check();
@@ -1604,11 +1733,11 @@ const AUTH_ACT = {
   'lock-back'() { LOCK.mode = 'pad'; LOCK.pin = ''; $('#lock').innerHTML = lockHtml(); },
   async 'lock-reset'() {
     const err = t => { $('#lk-err').textContent = t; };
-    const ph = digits($('#lk-phone').value), a = $('#lk-pin').value, b = $('#lk-pin2').value;
-    if (ph !== S.profile.phone) return err('That is not the number you signed up with.');
-    if (!/^\d{4}$/.test(a)) return err('The new password must be exactly 4 digits.');
+    const ph = S.profile.cc ? digits($('#lk-phone').value) : normUser($('#lk-phone').value), a = $('#lk-pin').value, b = $('#lk-pin2').value;
+    if (ph !== S.profile.phone) return err('That is not the username you signed up with.');
+    if (!goodPass(a)) return err('The new password needs 6 to 32 characters.');
     if (a !== b) return err('The two passwords do not match.');
-    S.profile.salt = uid(); S.profile.pin = await pinHash(S.profile.salt, a); if (cloudOn()) S.profile.ck = null; save(); LOCK.fails = 0; LOCK.until = 0;
+    S.profile.salt = uid(); S.profile.pin = await pinHash(S.profile.salt, a); S.profile.pl = 'txt'; if (cloudOn()) S.profile.ck = null; save(); LOCK.fails = 0; LOCK.until = 0;
     hideLock(); toast('Password changed');
   },
   /* settings */
@@ -1620,7 +1749,7 @@ const AUTH_ACT = {
     const err = t => { $('#pn-err').textContent = t; };
     const cur = $('#pn-cur').value, a = $('#pn-new').value, b = $('#pn-new2').value;
     if (await pinHash(S.profile.salt, cur) !== S.profile.pin) return err('Your current password is not right.');
-    if (!/^\d{4}$/.test(a)) return err('The new password must be exactly 4 digits.');
+    if (!goodPass(a)) return err('The new password needs 6 to 32 characters.');
     if (a !== b) return err('The two new passwords do not match.');
     if (cloudOn() && S.profile.ck) {
       try {
@@ -1629,36 +1758,47 @@ const AUTH_ACT = {
         S.profile.ck = nk;
       } catch (e) { return err('Connect to the internet to change your password.'); }
     }
-    S.profile.salt = uid(); S.profile.pin = await pinHash(S.profile.salt, a); save(); closeSheet(); toast('Password changed');
+    S.profile.salt = uid(); S.profile.pin = await pinHash(S.profile.salt, a); S.profile.pl = 'txt'; save(); closeSheet(); toast('Password changed');
   },
   async 'num-save'() {
     const err = t => { $('#pn-err').textContent = t; };
-    const cur = $('#pn-cur').value, cc = ($('#pn-cc').value.trim() || '+91').replace(/^(\d)/, '+$1'), ph = digits($('#pn-phone').value);
-    if (await pinHash(S.profile.salt, cur) !== S.profile.pin) return err('Your current password is not right.');
-    if (!checkPhone(cc, ph)) return err('Enter a valid mobile number, 7 to 12 digits.');
-    S.profile.cc = cc; S.profile.phone = ph; if (cloudOn()) S.profile.ck = await cloudHash(cc + ph, cur); commit(); cloudPush(true); closeSheet(); toast('Number updated');
+    const p = S.profile, cur = $('#pn-cur').value, ph = p.cc ? digits($('#pn-phone').value) : normUser($('#pn-phone').value);
+    if (await pinHash(p.salt, cur) !== p.pin) return err('Your current password is not right.');
+    if (p.cc) { if (!checkPhone(p.cc, ph)) return err('Enter a valid mobile number, 7 to 12 digits.'); }
+    else if (!checkUser(ph)) return err('Username: 3 to 20 letters, numbers, dot or underscore, with at least one letter.');
+    if (ph === p.phone) return closeSheet();
+    let nk = p.ck;
+    if (cloudOn()) {
+      try {
+        nk = await cloudHash(p.cc + ph, cur);
+        const ex = await userExists(p.cc, ph);
+        if (ex === true) return err('This username is not available. Try another one.');
+        if (ex === null) { const r = await cloudCall('ticic_pull', { p_phone: p.cc + ph, p_hash: nk }); if (r && r.s !== 'none') return err('This username is taken. Try another one.'); }
+      } catch (e) { return err('Connect to the internet to change your username.'); }
+    }
+    p.phone = ph; if (cloudOn()) p.ck = nk; commit(); cloudPush(true); closeSheet(); toast(p.cc ? 'Number updated' : 'Username updated');
   }
 };
 function openPinSheet() {
   V.sheet = 'pin';
   openSheet('<div class="shead"><h2>Change password</h2><button type="button" class="link" data-act="sheet-close">Cancel</button></div>' +
-    '<div class="flab"><label for="pn-cur">Current password</label></div>' + FIELD_password('pn-cur', '••••') + '<div class="flab"><label for="pn-new">New password</label></div>' + FIELD_password('pn-new', '••••') + '<div class="flab"><label for="pn-new2">New password again</label></div>' + FIELD_password('pn-new2', '••••') +
+    '<div class="flab"><label for="pn-cur">Current password</label></div>' + FIELD_password('pn-cur', 'Current password') + '<div class="flab"><label for="pn-new">New password</label></div>' + FIELD_password('pn-new', '6 or more characters') + '<div class="flab"><label for="pn-new2">New password again</label></div>' + FIELD_password('pn-new2', 'Repeat new password') +
     '<div class="ferr" id="pn-err" role="alert"></div><button type="button" class="btn glow big" data-act="pin-save">Save password</button>', 'tall');
   setTimeout(() => { const i = $('#pn-cur'); if (i) i.focus(); }, 260);
 }
 function openNumSheet() {
-  V.sheet = 'num'; const p = S.profile;
-  openSheet('<div class="shead"><h2>Change number</h2><button type="button" class="link" data-act="sheet-close">Cancel</button></div>' +
-    '<div class="flab"><label for="pn-phone">New mobile number</label></div><div class="ccrow"><div class="fld cc"><input id="pn-cc" type="text" value="' + esc(p.cc) + '" inputmode="tel" aria-label="Country code" maxlength="4"></div><div class="fld full grow"><input id="pn-phone" type="tel" inputmode="numeric" data-digits="12" value="' + esc(p.phone) + '"></div></div>' +
-    '<div class="flab"><label for="pn-cur">Your password</label></div>' + FIELD_password('pn-cur', '••••') + '<div class="ferr" id="pn-err" role="alert"></div><button type="button" class="btn glow big" data-act="num-save">Save number</button>', 'tall');
+  V.sheet = 'num'; const p = S.profile, u = !p.cc;
+  openSheet('<div class="shead"><h2>' + (u ? 'Change username' : 'Change number') + '</h2><button type="button" class="link" data-act="sheet-close">Cancel</button></div>' +
+    '<div class="flab"><label for="pn-phone">' + (u ? 'New username' : 'New mobile number') + '</label></div><div class="fld full"><input id="pn-phone" type="text" autocapitalize="none" spellcheck="false" value="' + esc(p.phone) + '"></div>' +
+    '<div class="flab"><label for="pn-cur">Your password</label></div>' + FIELD_password('pn-cur', 'Password') + '<div class="ferr" id="pn-err" role="alert"></div><button type="button" class="btn glow big" data-act="num-save">' + (u ? 'Save username' : 'Save number') + '</button>', 'tall');
 }
 function profileBlock() {
-  if (!S.profile) return '<div class="lbl">Login</div><div class="pst"><b>Login is off</b><span>Add a mobile number and a 4-digit password to save your tasks online and log in again on a new phone.</span></div><div class="btnrow"><button type="button" class="btn glow sm" data-act="s-login">Set up login</button></div>';
-  return '<div class="lbl">Login</div><div class="pst prof"><b>' + esc(maskPhone()) + '</b><span>Your login number on this phone</span></div>' +
+  if (!S.profile) return '<div class="lbl">Login</div><div class="pst"><b>Login is off</b><span>Choose a username and a password to save your tasks online and log in again on a new phone.</span></div><div class="btnrow"><button type="button" class="btn glow sm" data-act="s-login">Set up login</button></div>';
+  return '<div class="lbl">Login</div><div class="pst prof"><b>' + esc(maskPhone()) + '</b><span>Your login on this phone</span></div>' +
     '<div class="orow sw-row"><span>Ask for password when opening<small>Off by default. Locks after 30 seconds away</small></span><button type="button" class="sw' + (lockEnabled() ? ' on' : '') + '" role="switch" aria-checked="' + lockEnabled() + '" aria-label="Ask for password when opening" data-act="s-lock"></button></div>' +
     '<div class="orow sw-row"><span>Unlock with fingerprint<small>' + (BIO.plugin() ? 'Your password always works too' : 'Works in the installed app') + '</small></span><button type="button" class="sw' + (S.bioOn ? ' on' : '') + '" role="switch" aria-checked="' + !!S.bioOn + '" aria-label="Unlock with fingerprint" data-act="s-bio"></button></div>' +
-    (cloudOn() ? '<div class="orow"><span>Saved online<small>' + (S.profile.ck ? (S.cloudAt ? 'Last saved ' + relWhen(S.cloudAt) : 'Waiting for the first save') : 'Paused after a password reset on this phone') + '</small></span><button type="button" class="btn ghost sm" data-act="s-cloud">Save now</button></div>' : '') +
-    '<div class="btnrow"><button type="button" class="btn ghost sm" data-act="s-pin">Change password</button><button type="button" class="btn ghost sm" data-act="s-num">Change number</button><button type="button" class="btn ghost sm" data-act="s-locknow">Lock now</button></div>';
+    (cloudOn() ? '<div class="orow"><span>Saved online<small>' + (S.profile.ck ? (S.cloudAt ? 'Last saved ' + relWhen(S.cloudAt) : 'Waiting for the first save') : 'Paused after a password reset on this phone') + '</small></span><button type="button" class="btn ghost sm" data-act="s-cloud">Save now</button></div><div class="orow"><span>Recovery code<small>Use it if you forget your password</small></span><button type="button" class="btn ghost sm" data-act="s-rc">Make code</button></div>' : '') +
+    '<div class="btnrow"><button type="button" class="btn ghost sm" data-act="s-pin">Change password</button><button type="button" class="btn ghost sm" data-act="s-num">' + (S.profile.cc ? 'Change number' : 'Change username') + '</button><button type="button" class="btn ghost sm" data-act="s-locknow">Lock now</button></div>';
 }
 /* lock again after the app was away for 30 seconds */
 let awayAt = 0;
@@ -1898,7 +2038,7 @@ async function copyText(txt, ta) {
 }
 
 /* ---------- examples ---------- */
-function addExamples() {
+function addExamples(full) {
   const now = new Date(), td = today(), at = new Date(now.getTime() + 2 * 60000);
   const hm = d => pad(d.getHours()) + ':' + pad(d.getMinutes());
   const slot = (h, m) => { const t = pad(h) + ':' + pad(m); return atTime(td, t) > now ? [td, t] : [addDays(td, 1), t]; };
@@ -1906,13 +2046,16 @@ function addExamples() {
   const mk = (title, o) => Object.assign({ id: uid(), title, note: '', due: td, time: null, remind: 'morning', repeat: 'none', nudge: true, list: 'inbox', steps: [], done: false, created: Date.now() + (seq++) }, o);
   const v = slot(20, 0), c = slot(20, 30);
   S.tasks.push(
-    mk('Try your first reminder', { due: iso(at), time: hm(at), remind: 0, nudge: false, list: 'inbox' }),
+    mk('Try your first reminder', { due: iso(at), time: hm(at), remind: 0, nudge: false, list: 'inbox' })
+  );
+  if (!full) return;
+  S.tasks.push(
     mk('Take vitamins', { due: v[0], time: v[1], remind: 0, repeat: 'daily', list: 'health' }),
     mk('Call mom', { due: c[0], time: c[1], remind: 10, list: 'family' }),
     mk('Pay electricity bill', { due: addDays(td, 2), list: 'bills', steps: [{ id: uid(), t: 'Find the bill', done: false }, { id: uid(), t: 'Pay in the app', done: false }] }),
     mk('Buy milk and eggs', { remind: 'none', list: 'groceries' })
   );
-  if (!S.routines.length) S.routines.push({ id: uid(), name: 'Morning routine', time: '07:00', days: [0, 1, 2, 3, 4, 5, 6], on: true, c: 'amber', log: {},
+  if (!S.routines.length && full) S.routines.push({ id: uid(), name: 'Morning routine', time: '07:00', days: [0, 1, 2, 3, 4, 5, 6], on: true, c: 'amber', log: {},
     steps: ['Drink a glass of water', 'Stretch for 5 minutes', 'Plan the day'].map(t => ({ id: uid(), t })) });
 }
 
@@ -2372,7 +2515,7 @@ const ACT = {
     S = Object.assign(freshState(), d); S.settings = Object.assign(freshState().settings, d.settings || {}); S.onboarded = true;
     commit(); closeSheet(); toast('Restored ' + S.tasks.length + ' tasks');
   },
-  's-examples'() { addExamples(); commit(); closeSheet(); toast('Added examples'); },
+  's-examples'() { addExamples(true); commit(); closeSheet(); toast('Added examples'); },
   's-erase'(el) { if (!arm(el, 'Tap again to erase')) return; const n = S.name; S = freshState(); S.name = n; S.onboarded = true; commit(); closeSheet(); toast('Everything erased'); },
   /* routines */
   'r-day'(el) { const n = Number(el.dataset.v), i = RF.days.indexOf(n); if (i < 0) RF.days.push(n); else RF.days.splice(i, 1); rRefresh(); },
@@ -2454,7 +2597,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && V.sheet) c
 let GO = null, goAt = 0, goPass = false;
 document.addEventListener('pointerdown', e => {
   const a = e.target.closest('.go .arr'); if (!a) return;
-  const b = a.closest('.go'), max = b.clientWidth - a.offsetWidth - 12;
+  const b = a.closest('.go'), cs = getComputedStyle(b), max = Math.max(1, b.clientWidth - a.offsetWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight));
   GO = { a, b, x0: e.clientX, max, dx: 0, id: e.pointerId };
   try { a.setPointerCapture(e.pointerId); } catch (er) {}
   b.classList.add('drag');
@@ -2462,14 +2605,14 @@ document.addEventListener('pointerdown', e => {
 document.addEventListener('pointermove', e => {
   if (!GO || e.pointerId !== GO.id) return;
   GO.dx = Math.max(0, Math.min(GO.max, e.clientX - GO.x0));
-  GO.a.style.transform = 'translateX(' + GO.dx + 'px)'; GO.b.style.setProperty('--p', (GO.dx / GO.max).toFixed(3));
+  if (!GO.raf) GO.raf = requestAnimationFrame(() => { if (!GO) return; GO.raf = 0; GO.a.style.transform = 'translate3d(' + GO.dx + 'px,0,0)'; GO.b.style.setProperty('--p', (GO.dx / GO.max).toFixed(3)); });
 });
 function goEnd(e) {
   if (!GO || e.pointerId !== GO.id) return;
-  const { a, b, dx, max } = GO; GO = null; b.classList.remove('drag');
+  const { a, b, dx, max, raf } = GO; if (raf) cancelAnimationFrame(raf); GO = null; b.classList.remove('drag');
   if (dx > 6) goAt = Date.now();
   if (dx > max * 0.72) {
-    a.style.transform = 'translateX(' + max + 'px)'; b.style.setProperty('--p', 1);
+    a.style.transform = 'translate3d(' + max + 'px,0,0)'; b.style.setProperty('--p', 1);
     try { navigator.vibrate && navigator.vibrate(15); } catch (er) {}
     setTimeout(() => { goPass = true; b.click(); goPass = false; setTimeout(() => { a.style.transform = ''; b.style.setProperty('--p', 0); }, 500); }, 140);
   } else { a.style.transform = ''; b.style.setProperty('--p', 0); }
@@ -3101,5 +3244,40 @@ function boot() {
 }
 boot();
 
-})();</script>
+})();
+/* ---------- AI button: drag it anywhere, it snaps to the nearest side ---------- */
+(function () {
+  const f = document.getElementById('aifab'); if (!f) return;
+  const SZ = () => f.offsetWidth || 56, M = 12;
+  const lim = () => { const w = window.innerWidth, h = window.innerHeight, z = SZ(); return { w, h, z, top: 70, bot: h - z - 80 }; };
+  function place(side, fy, anim) {
+    const L = lim(), y = Math.max(L.top, Math.min(L.bot, Math.round(fy * L.h)));
+    f.style.transition = anim ? 'left .38s cubic-bezier(.2,.9,.3,1.2), top .25s ease, transform .3s' : '';
+    f.style.right = 'auto'; f.style.bottom = 'auto'; f.style.top = y + 'px'; f.style.left = (side === 'l' ? M : L.w - L.z - M) + 'px';
+  }
+  let saved = null; try { saved = JSON.parse(localStorage.getItem('ticic.aifab') || 'null'); } catch (e) {}
+  if (saved && (saved.side === 'l' || saved.side === 'r') && saved.fy > 0 && saved.fy < 1) place(saved.side, saved.fy, false);
+  window.addEventListener('resize', () => { if (saved) place(saved.side, saved.fy, false); });
+  let d = null, moved = false;
+  f.addEventListener('pointerdown', e => { const r = f.getBoundingClientRect(); d = { id: e.pointerId, ox: e.clientX - r.left, oy: e.clientY - r.top, x0: e.clientX, y0: e.clientY }; moved = false; try { f.setPointerCapture(e.pointerId); } catch (er) {} });
+  f.addEventListener('pointermove', e => {
+    if (!d || e.pointerId !== d.id) return;
+    if (!moved && Math.hypot(e.clientX - d.x0, e.clientY - d.y0) < 8) return;
+    if (!moved) { moved = true; f.classList.add('dragging'); f.style.transition = 'none'; }
+    const L = lim(); f.style.right = 'auto'; f.style.bottom = 'auto';
+    f.style.left = Math.max(4, Math.min(L.w - L.z - 4, e.clientX - d.ox)) + 'px';
+    f.style.top = Math.max(L.top, Math.min(L.bot, e.clientY - d.oy)) + 'px';
+  });
+  function end(e) {
+    if (!d || e.pointerId !== d.id) return; d = null;
+    if (!moved) return; f.classList.remove('dragging');
+    const r = f.getBoundingClientRect(), L = lim(), side = (r.left + L.z / 2) < L.w / 2 ? 'l' : 'r', fy = r.top / L.h;
+    saved = { side, fy }; try { localStorage.setItem('ticic.aifab', JSON.stringify(saved)); } catch (er) {}
+    place(side, fy, true); try { navigator.vibrate && navigator.vibrate(10); } catch (er) {}
+    setTimeout(() => { moved = false; }, 60);
+  }
+  f.addEventListener('pointerup', end); f.addEventListener('pointercancel', end);
+  f.addEventListener('click', e => { if (moved) { e.stopPropagation(); e.preventDefault(); } }, true);
+})();
+</script>
 </body></html>

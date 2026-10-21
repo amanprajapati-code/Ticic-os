@@ -3142,8 +3142,8 @@ async function aiTimetable(text, file) {
     const r = await fetch(CLOUD.url.replace(/\/$/, '') + '/functions/v1/ticic-ai', { method: 'POST', signal: ctl.signal, headers: Object.assign({ 'Content-Type': 'application/json', apikey: CLOUD.key }, /^eyJ/.test(CLOUD.key) ? { Authorization: 'Bearer ' + CLOUD.key } : {}),
       body: JSON.stringify({ mode: 'timetable', text: String(text || '').slice(0, 8000), file: file ? { mime: file.mime, data: file.data } : null, cid: aiCid() }) });
     if (r.status === 429) { const e = new Error('limit'); e.limit = true; throw e; }
-    if (!r.ok) throw new Error('http ' + r.status);
-    const d = await r.json(); if (!d || !Array.isArray(d.items)) throw new Error('bad');
+    if (!r.ok) { let m = ''; try { m = (await r.json()).error || ''; } catch (e) {} throw new Error('http ' + r.status + (m ? ' ' + m : '')); }
+    const d = await r.json(); if (!d || !Array.isArray(d.items)) throw new Error('bad reply');
     return d.items.map(i => ({ time: /^\d{2}:\d{2}$/.test(String((i || {}).time)) ? i.time : null, title: String((i || {}).title || '').trim().slice(0, 40), days: Array.isArray(i.days) ? i.days : null })).filter(i => i.time && i.title).slice(0, 40);
   } finally { clearTimeout(to); }
 }
@@ -3183,7 +3183,7 @@ Object.assign(ACT, {
     TT.busy = true; btn.disabled = true; btn.textContent = 'Reading...'; er.textContent = '';
     let items = null, msg = '';
     try { if (cloudOn()) items = await aiTimetable(text, TT.file); else if (TT.file) msg = 'Reading photos and PDFs needs the online AI, which is off in this app.'; }
-    catch (e) { msg = e && e.limit ? 'You reached today\'s AI limit. Try again tomorrow, or paste the text.' : 'Could not reach the AI. Check your internet.'; }
+    catch (e) { const m = String((e && e.message) || ''); msg = e && e.limit ? 'You reached today\'s AI limit. Try again tomorrow, or paste the text.' : /ai 429/.test(m) ? 'The AI is busy or its free limit is used up. Try again in a minute.' : /ai 40[013]/.test(m) ? 'The AI key is not accepted. Check GEMINI_API_KEY in Supabase.' : /ai 400/.test(m) ? 'The AI could not read that file. Try a clearer photo or a smaller PDF.' : /ai 5\d\d|bad ai/.test(m) ? 'The AI could not read this. Try a photo, or paste the text.' : navigator.onLine === false ? 'No internet. Connect and try again.' : 'Could not reach the AI (' + m.slice(0, 40) + ').'; }
     if ((!items || !items.length) && text) { const l = ttParseText(text); if (l.length) { items = l; msg = ''; } }
     TT.busy = false;
     if (!items || !items.length) { if ($('#tt-err')) { $('#tt-err').textContent = msg || 'I could not find times in that. Each line needs a time, like "6:00 AM Gym".'; btn.disabled = false; btn.textContent = 'Read my timetable'; } return; }

@@ -2737,6 +2737,7 @@ function applyAccent() { const a = ACCENTS[S.accent] || ACCENTS.blue; document.d
 function openTools() {
   V.sheet = 'tools';
   openSheet('<div class="shead"><h2>Tools</h2><button type="button" class="link" data-act="sheet-close">Done</button></div><div class="hlist">' +
+    toolRow('tt-open', 'camera', 'Import timetable', 'From ChatGPT text, a photo or a PDF') +
     toolRow('col-open', 'book', 'College', 'Timetable, attendance, exams, grades') +
     toolRow('cal-open', 'cal', 'Calendar', 'See your month at a glance') +
     toolRow('hab-open', 'grid2', 'Habits', 'Streaks and your last 14 weeks') +
@@ -3102,6 +3103,99 @@ document.addEventListener('change', async e => {
   const t = e.target; if (!t || !t.id || !t.files || !t.files.length) return;
   if (t.id === 'ce-cam' || t.id === 'ce-file') { const k = exKeep(); for (const f of Array.from(t.files)) { const r = await prepFile(f); if (r) CGS.files.push({ name: r.name, file: f }); } exForm(k); }
   if ((t.id === 'cd-cam' || t.id === 'cd-file') && CGS.open) { const n = await addFiles(t.files, CGS.open); if (n) toast(n + ' added'); exOpen(CGS.open); }
+});
+/* ---------- import a timetable (pasted text, photo or PDF) as routines ---------- */
+const TT = { file: null, items: [], routines: [], busy: false };
+function ttTime(h, m, ap) { h = +h; m = +m || 0; if (ap) { ap = ap.toLowerCase(); if (ap === 'pm' && h < 12) h += 12; if (ap === 'am' && h === 12) h = 0; } if (h > 23 || m > 59) return null; return pad(h) + ':' + pad(m); }
+function ttParseText(text) {
+  const out = [], re = /(\d{1,2})(?:[:.](\d{2}))?\s*(am|pm|a\.m\.|p\.m\.)?\s*(?:-|–|—|to|till|until)?\s*(?:(\d{1,2})(?:[:.](\d{2}))?\s*(am|pm|a\.m\.|p\.m\.)?)?/i;
+  String(text || '').split(/\r?\n/).forEach(line0 => {
+    let line = line0.replace(/[*_`#>]/g, ' ').replace(/\|/g, ' ').trim(); if (!line) return;
+    const m = /(\d{1,2})(?:[:.](\d{2}))\s*(am|pm)?|(\d{1,2})\s*(am|pm)/i.exec(line); if (!m) return;
+    const full = re.exec(line.slice(m.index)); if (!full) return;
+    let h = m[1] || m[4], mi = m[2] || 0, ap = (m[3] || m[5] || '').replace(/\./g, '');
+    let rest = line.slice(0, m.index) + ' ' + line.slice(m.index + full[0].length);
+    const a2 = (full[6] || '').replace(/\./g, '');
+    if (!ap && a2) { ap = a2; if (+h > (+full[4] || 0) && +full[4]) ap = a2.toLowerCase() === 'pm' ? 'am' : 'pm'; }
+    const t = ttTime(h, mi, ap); if (!t) return;
+    rest = rest.replace(/^[\s\-–—:.,)(\d]+(?=[A-Za-z])/, '').replace(/^[\s\-–—:.,•·]+|[\s\-–—:.,•·]+$/g, '').replace(/\s{2,}/g, ' ');
+    if (rest.length < 2 || rest.length > 60) return;
+    out.push({ time: t, title: rest.slice(0, 40), days: null });
+  });
+  return out.slice(0, 40);
+}
+function ttGroup(items) {
+  const B = [['Morning routine', 'amber', 0, 12], ['Afternoon routine', 'cyan', 12, 17], ['Evening routine', 'pink', 17, 21], ['Night routine', 'violet', 21, 24]], map = {};
+  items.forEach(it => {
+    const hh = +it.time.slice(0, 2), b = B.find(x => hh >= x[2] && hh < x[3]) || B[0];
+    let days = Array.isArray(it.days) ? Array.from(new Set(it.days.map(Number).filter(d => d >= 0 && d <= 6))).sort() : [0, 1, 2, 3, 4, 5, 6]; if (!days.length) days = [0, 1, 2, 3, 4, 5, 6];
+    const k = b[0] + '|' + days.join(''); (map[k] = map[k] || { b, days, list: [] }).list.push(it);
+  });
+  return Object.values(map).map(g => {
+    g.list.sort((a, b) => a.time < b.time ? -1 : 1);
+    return { name: g.b[0] + (g.days.length < 7 ? ' · ' + g.days.map(d => WDS[d]).join(', ') : ''), time: g.list[0].time, days: g.days, c: g.b[1], steps: g.list.map(i => fmtTime(i.time) + ' · ' + i.title), on: true };
+  }).sort((a, b) => a.time < b.time ? -1 : 1).slice(0, 12);
+}
+async function aiTimetable(text, file) {
+  const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 45000);
+  try {
+    const r = await fetch(CLOUD.url.replace(/\/$/, '') + '/functions/v1/ticic-ai', { method: 'POST', signal: ctl.signal, headers: Object.assign({ 'Content-Type': 'application/json', apikey: CLOUD.key }, /^eyJ/.test(CLOUD.key) ? { Authorization: 'Bearer ' + CLOUD.key } : {}),
+      body: JSON.stringify({ mode: 'timetable', text: String(text || '').slice(0, 8000), file: file ? { mime: file.mime, data: file.data } : null, cid: aiCid() }) });
+    if (r.status === 429) { const e = new Error('limit'); e.limit = true; throw e; }
+    if (!r.ok) throw new Error('http ' + r.status);
+    const d = await r.json(); if (!d || !Array.isArray(d.items)) throw new Error('bad');
+    return d.items.map(i => ({ time: /^\d{2}:\d{2}$/.test(String((i || {}).time)) ? i.time : null, title: String((i || {}).title || '').trim().slice(0, 40), days: Array.isArray(i.days) ? i.days : null })).filter(i => i.time && i.title).slice(0, 40);
+  } finally { clearTimeout(to); }
+}
+function openTimetableImport() {
+  TT.file = null; V.sheet = 'ttimp';
+  openSheet('<div class="shead"><h2>Import timetable</h2><button type="button" class="link" data-act="sheet-close">Cancel</button></div>' +
+    '<p class="fine" style="text-align:left;font-size:14px;margin:0 0 12px">Paste your timetable from ChatGPT or notes, or add a photo or PDF of it. Ticic turns it into morning, afternoon and evening routines.</p>' +
+    '<div class="fld full"><textarea id="tt-text" rows="5" placeholder="6:00 AM Wake up&#10;7:00 AM Gym&#10;9:00 AM College" style="width:100%;resize:none;background:transparent;border:0;outline:0;font:inherit;color:inherit"></textarea></div>' +
+    '<input type="file" id="tt-file" accept="image/*,application/pdf" hidden><div class="btnrow"><button type="button" class="btn ghost sm" data-act="tt-pick">Photo or PDF</button><span class="fine" id="tt-fname" style="margin:0;align-self:center">No file chosen</span></div>' +
+    '<div class="ferr" id="tt-err" role="alert"></div><button type="button" class="btn glow big" data-act="tt-read">Read my timetable</button>', 'tall');
+}
+document.addEventListener('change', e => {
+  if (!e.target || e.target.id !== 'tt-file') return; const f = e.target.files && e.target.files[0]; if (!f) return;
+  const nm = $('#tt-fname'), er = $('#tt-err'); const bad = t => { if (er) er.textContent = t; TT.file = null; if (nm) nm.textContent = 'No file chosen'; };
+  if (er) er.textContent = '';
+  if (/^image\//.test(f.type)) {
+    imgSmall(f, 1600, d => { const m = /^data:([^;]+);base64,(.+)$/.exec(d || ''); if (!m) return bad('Could not read that photo.'); TT.file = { mime: m[1], data: m[2] }; if (nm) nm.textContent = f.name.slice(0, 24); });
+  } else if (f.type === 'application/pdf' || /\.pdf$/i.test(f.name)) {
+    if (f.size > 5 * 1024 * 1024) return bad('That PDF is too big. Use one under 5 MB.');
+    const r = new FileReader(); r.onload = () => { const m = /^data:[^;]*;base64,(.+)$/.exec(String(r.result)); if (!m) return bad('Could not read that PDF.'); TT.file = { mime: 'application/pdf', data: m[1] }; if (nm) nm.textContent = f.name.slice(0, 24); }; r.onerror = () => bad('Could not read that PDF.'); r.readAsDataURL(f);
+  } else bad('Choose a photo or a PDF.');
+});
+function ttPreview() {
+  V.sheet = 'ttprev';
+  openSheet('<div class="shead"><h2>Your routines</h2><button type="button" class="link" data-act="sheet-close">Cancel</button></div>' +
+    '<p class="fine" style="text-align:left;font-size:14px;margin:0 0 10px">Check these, then add them. You can edit any routine later.</p>' +
+    TT.routines.map((r, i) => '<div class="orow" style="align-items:flex-start;gap:12px"><span style="flex:1;min-width:0"><b>' + esc(r.name) + '</b><small>' + fmtTime(r.time) + ' · ' + r.steps.length + (r.steps.length === 1 ? ' step' : ' steps') + '</small><small style="white-space:normal">' + esc(r.steps.slice(0, 4).join(', ') + (r.steps.length > 4 ? '…' : '')) + '</small></span><button type="button" class="sw' + (r.on ? ' on' : '') + '" role="switch" aria-checked="' + r.on + '" aria-label="Add ' + esc(r.name) + '" style="flex:none" data-act="tt-tog" data-i="' + i + '"></button></div>').join('') +
+    '<button type="button" class="btn glow big" data-act="tt-add">Add routines</button>', 'tall');
+}
+Object.assign(ACT, {
+  'tt-open'() { closeAll(); setTimeout(openTimetableImport, 330); },
+  'tt-pick'() { const i = $('#tt-file'); if (i) i.click(); },
+  'tt-tog'(el) { const r = TT.routines[+el.dataset.i]; if (!r) return; r.on = !r.on; el.classList.toggle('on', r.on); el.setAttribute('aria-checked', r.on); },
+  async 'tt-read'() {
+    if (TT.busy) return; const text = ($('#tt-text').value || '').trim(), er = $('#tt-err'), btn = $('[data-act="tt-read"]');
+    if (!text && !TT.file) { er.textContent = 'Paste your timetable or choose a photo or PDF.'; return; }
+    TT.busy = true; btn.disabled = true; btn.textContent = 'Reading...'; er.textContent = '';
+    let items = null, msg = '';
+    try { if (cloudOn()) items = await aiTimetable(text, TT.file); else if (TT.file) msg = 'Reading photos and PDFs needs the online AI, which is off in this app.'; }
+    catch (e) { msg = e && e.limit ? 'You reached today\'s AI limit. Try again tomorrow, or paste the text.' : 'Could not reach the AI. Check your internet.'; }
+    if ((!items || !items.length) && text) { const l = ttParseText(text); if (l.length) { items = l; msg = ''; } }
+    TT.busy = false;
+    if (!items || !items.length) { if ($('#tt-err')) { $('#tt-err').textContent = msg || 'I could not find times in that. Each line needs a time, like "6:00 AM Gym".'; btn.disabled = false; btn.textContent = 'Read my timetable'; } return; }
+    TT.items = items; TT.routines = ttGroup(items); ttPreview();
+  },
+  'tt-add'() {
+    let n = 0; TT.routines.filter(r => r.on).forEach(r => {
+      if (S.routines.some(x => x.name === r.name && x.time === r.time)) return;
+      S.routines.push({ id: uid(), name: r.name, time: r.time, days: r.days, on: true, c: r.c, log: {}, steps: r.steps.map(t => ({ id: uid(), t })) }); n++;
+    });
+    closeSheet(); commit(); toast(n ? n + (n > 1 ? ' routines added' : ' routine added') : 'Those routines are already there');
+  }
 });
 Object.assign(ACT, {
   'col-open'() { openCollege(); },

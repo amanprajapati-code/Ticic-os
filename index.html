@@ -3137,7 +3137,7 @@ function ttGroup(items) {
   }).sort((a, b) => a.time < b.time ? -1 : 1).slice(0, 12);
 }
 async function aiTimetable(text, file) {
-  const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 45000);
+  const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 110000);
   try {
     const r = await fetch(CLOUD.url.replace(/\/$/, '') + '/functions/v1/ticic-ai', { method: 'POST', signal: ctl.signal, headers: Object.assign({ 'Content-Type': 'application/json', apikey: CLOUD.key }, /^eyJ/.test(CLOUD.key) ? { Authorization: 'Bearer ' + CLOUD.key } : {}),
       body: JSON.stringify({ mode: 'timetable', text: String(text || '').slice(0, 8000), file: file ? { mime: file.mime, data: file.data } : null, cid: aiCid() }) });
@@ -3180,10 +3180,10 @@ Object.assign(ACT, {
   async 'tt-read'() {
     if (TT.busy) return; const text = ($('#tt-text').value || '').trim(), er = $('#tt-err'), btn = $('[data-act="tt-read"]');
     if (!text && !TT.file) { er.textContent = 'Paste your timetable or choose a photo or PDF.'; return; }
-    TT.busy = true; btn.disabled = true; btn.textContent = 'Reading...'; er.textContent = '';
+    TT.busy = true; btn.disabled = true; btn.textContent = 'Reading...'; er.textContent = TT.file ? 'Reading your file. This can take up to a minute.' : '';
     let items = null, msg = '';
     try { if (cloudOn()) items = await aiTimetable(text, TT.file); else if (TT.file) msg = 'Reading photos and PDFs needs the online AI, which is off in this app.'; }
-    catch (e) { const m = String((e && e.message) || ''); msg = e && e.limit ? 'You reached today\'s AI limit. Try again tomorrow, or paste the text.' : /ai 429/.test(m) ? 'The AI is busy or its free limit is used up. Try again in a minute.' : /ai 40[013]/.test(m) ? 'The AI key is not accepted. Check GEMINI_API_KEY in Supabase.' : /ai 400/.test(m) ? 'The AI could not read that file. Try a clearer photo or a smaller PDF.' : /ai 5\d\d|bad ai/.test(m) ? 'The AI could not read this. Try a photo, or paste the text.' : navigator.onLine === false ? 'No internet. Connect and try again.' : 'Could not reach the AI (' + m.slice(0, 40) + ').'; }
+    catch (e) { const m = String((e && e.message) || ''); msg = e && e.limit ? 'You reached today\'s AI limit. Try again tomorrow, or paste the text.' : /abort/i.test(m) ? 'The AI took too long. Try a smaller PDF, or a photo of just one page.' : /ai 429/.test(m) ? 'The AI is busy or its free limit is used up. Try again in a minute.' : /ai 40[013]/.test(m) ? 'The AI key is not accepted. Check GEMINI_API_KEY in Supabase.' : /ai 400/.test(m) ? 'The AI could not read that file. Try a clearer photo or a smaller PDF.' : /ai 5\d\d|bad ai/.test(m) ? 'The AI could not read this. Try a photo, or paste the text.' : navigator.onLine === false ? 'No internet. Connect and try again.' : 'Could not reach the AI (' + m.slice(0, 40) + ').'; }
     if ((!items || !items.length) && text) { const l = ttParseText(text); if (l.length) { items = l; msg = ''; } }
     TT.busy = false;
     if (!items || !items.length) { if ($('#tt-err')) { $('#tt-err').textContent = msg || 'I could not find times in that. Each line needs a time, like "6:00 AM Gym".'; btn.disabled = false; btn.textContent = 'Read my timetable'; } return; }

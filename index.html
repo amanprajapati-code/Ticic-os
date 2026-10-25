@@ -632,6 +632,37 @@ html.booting .rise,html.booting .fab{animation-play-state:paused}
 .lite .aifab::after{animation:none}
 html.booting .aifab{animation-play-state:paused}
 @media (max-height:620px){.aifab{width:50px;height:50px;bottom:calc(86px + var(--sab))}}
+
+/* dark mode */
+html.dark{color-scheme:dark;--navy:226,236,255;--tx:#E8EFFF;--mu:rgba(226,236,255,.7);--mu2:rgba(226,236,255,.48);--line:rgba(255,255,255,.09);--glass:rgba(22,32,58,.86)}
+html.dark,html.dark body{background:#0A1020}
+html.dark .blobs{background:radial-gradient(60% 40% at 90% 18%,rgba(70,110,210,.3),transparent 70%),radial-gradient(70% 45% at 0% 55%,rgba(30,70,170,.34),transparent 70%),#0A1020}
+html.dark #nav{background:rgba(20,29,52,.97);border-color:rgba(255,255,255,.09)}
+html.dark .tab{background:rgba(255,255,255,.08)}html.dark .tab.on{background:rgb(var(--blue));color:#fff}
+html.dark .round{background:rgba(255,255,255,.09)}
+html.dark .sheet{background:#111A30;border-color:rgba(255,255,255,.09)}
+html.dark .fld,html.dark .chip,html.dark .nrow,html.dark .hsum>div{background:rgba(255,255,255,.08);box-shadow:none}
+html.dark .chip.on{background:rgb(var(--blue));color:#fff}
+html.dark .orow{border-bottom-color:rgba(255,255,255,.09)}
+html.dark .seg{background:rgba(255,255,255,.09)}
+html.dark .btn{background:rgba(255,255,255,.1)}html.dark .btn.glow{background:rgb(var(--blue));color:#fff}
+html.dark input,html.dark textarea{color:#E8EFFF}
+html.dark .rcbox{background:rgba(255,255,255,.08)}
+html.dark .hsum b{color:#7FD6EE}
+html.dark .ustat.ok{color:#4ADE80}html.dark .ustat.bad{color:#FF8A80}
+html.dark .scrim{background:rgba(0,0,0,.55)}
+html.dark h1 .soft{color:rgba(226,236,255,.5)}
+html.dark .lite .glass,html.dark.lite .glass{background:rgba(22,32,58,.96)!important}
+html.dark .glass,html.dark .tcard,html.dark .rcard,html.dark .rrow,html.dark .lcard,html.dark .alert,html.dark .wcard{background:rgba(22,32,58,.9);border-color:rgba(255,255,255,.09);box-shadow:0 8px 18px -12px rgba(0,0,0,.6)}
+html.dark .wmain b,html.dark .wmain small,html.dark .wmain em{color:var(--tx)}html.dark .wmain small,html.dark .wmain em{color:var(--mu)}
+html.dark .wgo{background:rgba(255,255,255,.12);color:#fff}
+html.dark .day{background:rgba(255,255,255,.07)}
+html.dark .fab{box-shadow:0 0 0 4px rgba(20,29,52,.97),0 14px 24px -8px rgba(5,60,200,.75)}
+html.dark .aifab{box-shadow:0 0 0 4px rgba(20,29,52,.97),0 14px 24px -8px rgba(5,60,200,.75)}
+html.dark .stepcard,html.dark .pst,html.dark .panel{color:var(--tx)}
+html.dark .fchips .chip{background:rgba(255,255,255,.09);color:var(--tx)}html.dark .fchips .chip.on{background:rgb(var(--blue));color:#fff}html.dark .chip small,html.dark .chip span{color:inherit}
+html.dark .fld,html.dark .sheet .fld,html.dark .fld.full,html.dark .fld.inline,html.dark .fld.cc,html.dark .fld.grow{background:rgba(255,255,255,.09)!important}html.dark .fld input,html.dark .fld textarea{background:transparent!important;color:#E8EFFF!important}html.dark .fld input::placeholder,html.dark .fld textarea::placeholder{color:rgba(226,236,255,.4)}html.dark .fld label,html.dark .fld .vh+span{color:var(--mu)}html.dark .fld input[type=date],html.dark .fld input[type=time]{color-scheme:dark}
+html.dark .aib.bot,html.dark .bn,html.dark .hrow,html.dark .pst,html.dark .qbox,html.dark .redit,html.dark .sbtn,html.dark .tile,html.dark .wrow,html.dark textarea,html.dark .sheet .addrow input{background:rgba(255,255,255,.09)!important;color:var(--tx)}html.dark .qbox input,html.dark .tile input{color:#E8EFFF;color-scheme:dark}html.dark .tile span,html.dark .qbox .cap{color:var(--mu)}html.dark .micb{background:rgba(255,255,255,.12);color:#9CC4FF}
 </style></head><body><div id="splash" aria-hidden="true"><div class="slogo" id="slogo"></div><div class="sname">Ticic</div></div>
 <div class="blobs" aria-hidden="true"><i></i><i></i><i></i></div>
 <div id="app"><div id="warn"></div><main id="view"></main></div>
@@ -1365,7 +1396,7 @@ function openRoutine(id) {
     '<label class="vh" for="r-name">Routine name</label><div class="fld full"><input id="r-name" type="text" value="' + esc(RF.name) + '" placeholder="Morning routine" autocomplete="off"></div>' +
     '<div class="orow"><span>Starts at</span><label class="fld inline"><span class="vh">Start time</span><input type="time" id="r-time" value="' + RF.time + '"></label></div><div class="orow"><span>Days</span><div id="r-days"></div></div>' +
     '<div class="lbl">Steps</div><div id="r-steps" class="steps"></div><form data-form="rstepadd" class="addrow slim"><label class="vh" for="r-step">Add a step</label><input id="r-step" type="text" placeholder="Add a step" autocomplete="off" enterkeyhint="done"><button type="submit" class="btn sm">Add</button></form>' +
-    '<div class="sfoot">' + (ex ? '<button type="button" class="btn ghost danger" data-act="r-delete" id="r-del">Delete</button>' : '') + '<button type="button" class="btn glow grow" data-act="r-save">Save routine</button></div>', 'tall');
+    '<div class="sfoot">' + (ex ? '<button type="button" class="btn ghost danger" data-act="r-delete" id="r-del">Delete</button><button type="button" class="btn ghost" data-act="r-share">Share</button>' : '') + '<button type="button" class="btn glow grow" data-act="r-save">Save routine</button></div>', 'tall');
   rRefresh();
   setTimeout(() => { const i = $('#r-name'); if (i && !RF.name) i.focus(); }, 220);
 }
@@ -1969,10 +2000,16 @@ function bestStreak() {
   ds.forEach(d => { run = prev && addDays(prev, 1) === d ? run + 1 : 1; if (run > best) best = run; prev = d; });
   return best;
 }
+function examCard() {
+  const td = today(), re = /exam|test|sessional|viva|quiz|practical/i;
+  const ex = S.tasks.filter(t => t.col === 'ex' && t.main && !t.done && t.due && t.due >= td && (t.exam || re.test(t.title))).sort((a, b) => a.due < b.due ? -1 : 1)[0];
+  if (!ex) return ''; const k = dayDiff(ex.due, td); if (k > 45) return '';
+  return wcardHtml('col-ex', 'flag', esc(ex.title), (k === 0 ? 'Today' : k === 1 ? 'Tomorrow' : k + ' days left') + (ex.time ? ' at ' + fmtTime(ex.time) : ''), '<span class="wgo">' + (k <= 1 ? 'Go' : k + 'd') + '</span>');
+}
 function extraCards() {
-  let h = '';
+  let h = examCard();
   const w = weekStats(0), pw = weekStats(1);
-  if (w.total + pw.total > 0) h += wcardHtml('wk-open', 'pulse', w.total + ' done this week', pw.total ? (w.total >= pw.total ? 'Up from ' : 'Last week: ') + pw.total + ' last week. Tap for details' : 'Tap for your weekly summary', '<span class="wgo">View</span>');
+  if (w.total + pw.total > 0) h += wcardHtml('wk-open', 'pulse', w.total + ' done this week', (streak() >= 2 ? streak() + ' day streak. ' : '') + (pw.total ? (w.total >= pw.total ? 'Up from ' : 'Last week: ') + pw.total + ' last week' : 'Tap for your weekly summary'), '<span class="wgo">View</span>');
   const td = Date.now(), last = S.lastBackup || S.firstRun || td;
   if (!cloudOn() && S.tasks.length >= 3 && td - last > 7 * 864e5) h += wcardHtml('bk-now', 'shield' in IC ? 'shield' : 'bell', 'Back up your tasks', 'Copy a backup so you never lose them', '<span class="wgo">Copy</span>');
   h += checkinCard();
@@ -2527,6 +2564,10 @@ const ACT = {
     if (isNew) S.routines.push(RF); else { const i = S.routines.findIndex(r => r.id === RF.id); if (i >= 0) S.routines[i] = RF; }
     commit(); closeSheet(); toast('Saved ' + RF.name);
   },
+  'r-share'() {
+    const r = S.routines.find(x => x.id === RF.id) || RF, days = (r.days || []).length === 7 ? 'Every day' : (r.days || []).map(d => WDS[d]).join(', ');
+    shareText(r.name + '\n' + fmtTime(r.time) + ' · ' + days + '\n\n' + (r.steps || []).map(x => (typeof x === 'string' ? x : x.t)).map(t => /\d\s*(am|pm)/i.test(t) ? t : '• ' + t).join('\n') + '\n\nMade with Ticic, a free reminder app for students.', 'My routine');
+  },
   'r-delete'(el) { if (!arm(el, 'Tap again to delete')) return; S.routines = S.routines.filter(r => r.id !== RF.id); commit(); closeSheet(); },
   /* lists */
   'l-col'(el) { LF.c = el.dataset.v; lRefresh(); },
@@ -2733,6 +2774,8 @@ async function shareText(text, title) {
 }
 const toolRow = (act, ico, t, s) => '<button type="button" class="nrow" data-act="' + act + '"><span class="ni">' + ic(ico, 18) + '</span><span class="nt"><b>' + t + '</b><small>' + s + '</small></span></button>';
 const ACCENTS = { blue: ['5,96,224', 'Blue'], indigo: ['79,70,229', 'Indigo'], teal: ['13,148,136', 'Teal'] };
+function applyTheme() { const t = S.theme || 'light'; let d = t === 'dark'; try { if (t === 'auto') d = matchMedia('(prefers-color-scheme: dark)').matches; } catch (e) {} document.documentElement.classList.toggle('dark', d); try { const m = document.querySelector('meta[name=theme-color]'); if (m) m.setAttribute('content', d ? '#0A1020' : '#CFE4FF'); } catch (e) {} }
+try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (S.theme === 'auto') applyTheme(); }); } catch (e) {}
 function applyAccent() { const a = ACCENTS[S.accent] || ACCENTS.blue; document.documentElement.style.setProperty('--blue', a[0]); }
 function openTools() {
   V.sheet = 'tools';
@@ -2746,7 +2789,7 @@ function openTools() {
     toolRow('mc-open', 'pill', 'Medicine course', 'Reminders that stop by themselves') +
     toolRow('share-today', 'share', 'Share my plan', 'Send today to WhatsApp or anyone') +
     toolRow('exp-open', 'file', 'Export', 'Copy or share your tasks as a table') +
-    '</div><div class="lbl">Accent colour</div>' + chipRow(Object.keys(ACCENTS).map(k => [k, ACCENTS[k][1]]), S.accent || 'blue', 'acc-set', 'a'), 'tall');
+    '</div><div class="lbl">Appearance</div>' + chipRow([['light', 'Light'], ['dark', 'Dark'], ['auto', 'Auto']], S.theme || 'light', 'theme-set', 'v') + '<div class="lbl">Accent colour</div>' + chipRow(Object.keys(ACCENTS).map(k => [k, ACCENTS[k][1]]), S.accent || 'blue', 'acc-set', 'a'), 'tall');
 }
 /* calendar */
 function calMap(a, b) {
@@ -2911,6 +2954,7 @@ window.__ticicQuick = k => { try { if (k === 'voice') { openAI(true); return; } 
 document.addEventListener('visibilitychange', () => { if (!document.hidden) focTick(); });
 Object.assign(ACT, {
   tools() { openTools(); },
+  'theme-set'(el) { S.theme = el.dataset.v; save(); applyTheme(); chipSelect(el); cloudPush(); },
   'acc-set'(el) { S.accent = el.dataset.v; save(); applyAccent(); chipSelect(el); cloudPush(); },
   'cal-open'() { openCal(0); }, 'cal-nav'(el) { openCal(CAL + Number(el.dataset.o)); },
   'cal-day'(el) { V.day = el.dataset.d; V.view = 'today'; closeSheet(); render(); },
@@ -3043,7 +3087,7 @@ const exKeep = () => ({ title: ($('#ce-title') || {}).value, date: ($('#ce-date'
 function exSave() {
   const date = $('#ce-date').value, tm = $('#ce-time').value || null; if (!date) return toast('Pick the date');
   const sn = CGS.exSub ? colName(CGS.exSub) : '', ty = CGS.exType, t0 = $('#ce-title').value.trim(), title = t0 || (sn ? sn + ' ' : '') + (ty === 'Assignment' ? 'assignment' : 'exam'), grp = uid(), exam = ty !== 'Assignment', files = CGS.files.slice();
-  const mk = (t, due, time, remind, main) => S.tasks.push({ id: uid(), title: t, note: '', due, time, remind, repeat: 'none', prio: main ? 'high' : 'none', sound: 'default', nudge: !!main, list: 'college', steps: [], done: false, created: Date.now() + S.tasks.length, col: 'ex', csub: CGS.exSub || '', grp, main: !!main });
+  const mk = (t, due, time, remind, main) => S.tasks.push({ id: uid(), title: t, note: '', due, time, remind, repeat: 'none', prio: main ? 'high' : 'none', sound: 'default', nudge: !!main, list: 'college', steps: [], done: false, created: Date.now() + S.tasks.length, col: 'ex', csub: CGS.exSub || '', grp, main: !!main, exam: !!(main && exam) });
   mk(title, date, tm, tm ? 60 : 'morning', true);
   const td = today(); [[3, exam ? 'Start revising: ' : 'Due in 3 days: '], [1, exam ? 'Tomorrow: ' : 'Due tomorrow, upload it today: ']].forEach(a => { const d = addDays(date, -a[0]); if (d >= td) mk(a[1] + title, d, null, 'morning', false); });
   (async () => { const n = await addFiles(files.map(x => x.file), grp); commit(); closeSheet(); toast('Saved. ' + relDay(date) + (n ? ' · ' + n + ' file' + (n > 1 ? 's' : '') : '')); })();
@@ -3320,7 +3364,7 @@ Object.assign(ACT, {
 document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target && e.target.id === 'ai-in') { e.preventDefault(); ACT['ai-send'](); } });
 
 function boot() {
-  load(); if (!S.lockMig) { S.lockMig = 1; S.lockOn = false; save(); } try { applyAccent(); } catch (e) {} if (!S.firstRun) { S.firstRun = Date.now(); } V.day = today(); V.anim = true; try { if ((navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4) || (navigator.deviceMemory && navigator.deviceMemory <= 3)) document.documentElement.classList.add('lite'); } catch (e) {} runSplash(!S.onboarded);
+  load(); if (!S.lockMig) { S.lockMig = 1; S.lockOn = false; save(); } try { applyAccent(); applyTheme(); } catch (e) {} if (!S.firstRun) { S.firstRun = Date.now(); } V.day = today(); V.anim = true; try { if ((navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4) || (navigator.deviceMemory && navigator.deviceMemory <= 3)) document.documentElement.classList.add('lite'); } catch (e) {} runSplash(!S.onboarded);
   if (lockEnabled()) { showLock(true); BIO.check().then(ok => { if (ok && S.bioOn && $('#lock').classList.contains('on') && LOCK.mode === 'pad') { $('#lock').innerHTML = lockHtml(); setTimeout(lockBio, 300); } }); } else BIO.check();
   render(); BOOT.hold = true; setTimeout(releaseHold, 1500); document.addEventListener('pointerdown', releaseHold, { capture: true, passive: true });
   nativeChrome();

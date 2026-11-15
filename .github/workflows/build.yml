@@ -805,20 +805,29 @@ jobs:
           cat > $D/TicicVoicePlugin.java <<'JAVA'
           package com.ticic.daily;
 
+          import android.Manifest;
           import android.app.Activity;
           import android.content.Intent;
+          import android.os.Bundle;
+          import android.speech.RecognitionListener;
           import android.speech.RecognizerIntent;
+          import android.speech.SpeechRecognizer;
           import androidx.activity.result.ActivityResult;
           import com.getcapacitor.JSObject;
+          import com.getcapacitor.PermissionState;
           import com.getcapacitor.Plugin;
           import com.getcapacitor.PluginCall;
           import com.getcapacitor.PluginMethod;
           import com.getcapacitor.annotation.ActivityCallback;
           import com.getcapacitor.annotation.CapacitorPlugin;
+          import com.getcapacitor.annotation.Permission;
+          import com.getcapacitor.annotation.PermissionCallback;
           import java.util.ArrayList;
 
-          @CapacitorPlugin(name = "TicicVoice")
+          @CapacitorPlugin(name = "TicicVoice", permissions = { @Permission(strings = { Manifest.permission.RECORD_AUDIO }, alias = "mic") })
           public class TicicVoicePlugin extends Plugin {
+            private SpeechRecognizer sr;
+
             @PluginMethod
             public void listen(PluginCall call) {
               Intent i = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
@@ -841,8 +850,174 @@ jobs:
               }
               call.resolve(o);
             }
+
+            @PluginMethod
+            public void start(PluginCall call) {
+              if (getPermissionState("mic") != PermissionState.GRANTED) {
+                requestPermissionForAlias("mic", call, "micResult");
+                return;
+              }
+              begin(call);
+            }
+
+            @PermissionCallback
+            private void micResult(PluginCall call) {
+              if (getPermissionState("mic") == PermissionState.GRANTED) begin(call);
+              else call.reject("denied");
+            }
+
+            private void begin(final PluginCall call) {
+              getActivity().runOnUiThread(() -> {
+                try {
+                  if (!SpeechRecognizer.isRecognitionAvailable(getContext())) {
+                    call.reject("unavailable");
+                    return;
+                  }
+                  if (sr != null) {
+                    sr.destroy();
+                    sr = null;
+                  }
+                  sr = SpeechRecognizer.createSpeechRecognizer(getContext());
+                  sr.setRecognitionListener(new RecognitionListener() {
+                    public void onReadyForSpeech(Bundle b) {
+                      notifyListeners("ready", new JSObject());
+                    }
+                    public void onBeginningOfSpeech() {}
+                    public void onRmsChanged(float rms) {
+                      JSObject o = new JSObject();
+                      o.put("level", rms);
+                      notifyListeners("rms", o);
+                    }
+                    public void onBufferReceived(byte[] buf) {}
+                    public void onEndOfSpeech() {
+                      notifyListeners("end", new JSObject());
+                    }
+                    public void onError(int code) {
+                      JSObject o = new JSObject();
+                      o.put("code", code);
+                      notifyListeners("error", o);
+                    }
+                    public void onResults(Bundle b) {
+                      ArrayList<String> a = b.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                      JSObject o = new JSObject();
+                      if (a != null && a.size() > 0) o.put("text", a.get(0));
+                      notifyListeners("final", o);
+                    }
+                    public void onPartialResults(Bundle b) {
+                      ArrayList<String> a = b.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                      if (a != null && a.size() > 0) {
+                        JSObject o = new JSObject();
+                        o.put("text", a.get(0));
+                        notifyListeners("partial", o);
+                      }
+                    }
+                    public void onEvent(int t, Bundle b) {}
+                  });
+                  Intent i = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+                  i.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+                  i.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
+                  i.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
+                  sr.startListening(i);
+                  call.resolve();
+                } catch (Exception e) {
+                  call.reject("failed");
+                }
+              });
+            }
+
+            @PluginMethod
+            public void stop(PluginCall call) {
+              getActivity().runOnUiThread(() -> {
+                try {
+                  if (sr != null) sr.stopListening();
+                } catch (Exception e) {}
+                call.resolve();
+              });
+            }
+
+            @PluginMethod
+            public void cancel(PluginCall call) {
+              getActivity().runOnUiThread(() -> {
+                try {
+                  if (sr != null) {
+                    sr.cancel();
+                    sr.destroy();
+                    sr = null;
+                  }
+                } catch (Exception e) {}
+                call.resolve();
+              });
+            }
+
+            @PluginMethod
+            public void closeApp(PluginCall call) {
+              getActivity().runOnUiThread(() -> {
+                try {
+                  getActivity().finishAndRemoveTask();
+                } catch (Exception e) {}
+              });
+              call.resolve();
+            }
+
+            @PluginMethod
+            public void addTile(PluginCall call) {
+              if (android.os.Build.VERSION.SDK_INT < 33) {
+                call.reject("manual");
+                return;
+              }
+              try {
+                android.app.StatusBarManager sbm = (android.app.StatusBarManager) getContext().getSystemService(android.content.Context.STATUS_BAR_SERVICE);
+                int ic = getContext().getResources().getIdentifier("ic_ticic_tile", "drawable", getContext().getPackageName());
+                sbm.requestAddTileService(new android.content.ComponentName(getContext(), VoiceTile.class), "Ticic Voice", android.graphics.drawable.Icon.createWithResource(getContext(), ic), getContext().getMainExecutor(), r -> {});
+                call.resolve();
+              } catch (Exception e) {
+                call.reject("manual");
+              }
+            }
           }
           JAVA
+          cat > $D/VoiceTile.java <<'JAVA'
+          package com.ticic.daily;
+
+          import android.app.PendingIntent;
+          import android.content.Intent;
+          import android.os.Build;
+          import android.service.quicksettings.Tile;
+          import android.service.quicksettings.TileService;
+
+          @android.annotation.TargetApi(24)
+          public class VoiceTile extends TileService {
+            @Override
+            public void onStartListening() {
+              Tile t = getQsTile();
+              if (t != null) {
+                t.setState(Tile.STATE_INACTIVE);
+                t.updateTile();
+              }
+            }
+
+            @Override
+            public void onClick() {
+              Intent i = new Intent(this, MainActivity.class);
+              i.setAction(Intent.ACTION_MAIN);
+              i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+              i.putExtra("ticic_quick", "vlock");
+              if (Build.VERSION.SDK_INT >= 34) {
+                PendingIntent pi = PendingIntent.getActivity(this, 11, i, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+                startActivityAndCollapse(pi);
+              } else {
+                startActivityAndCollapse(i);
+              }
+            }
+          }
+          JAVA
+          mkdir -p $R/drawable
+          cat > $R/drawable/ic_ticic_tile.xml <<'XML'
+          <?xml version="1.0" encoding="utf-8"?>
+          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
+              <path android:fillColor="#FFFFFFFF" android:pathData="M12,14c1.66,0 3,-1.34 3,-3V5c0,-1.66 -1.34,-3 -3,-3S9,3.34 9,5v6c0,1.66 1.34,3 3,3zM17.3,11c0,3 -2.54,5.1 -5.3,5.1S6.7,14 6.7,11H5c0,3.41 2.72,6.23 6,6.72V21h2v-3.28c3.28,-0.48 6,-3.3 6,-6.72h-1.7z"/>
+          </vector>
+          XML
           cat > $R/xml/ticic_shortcuts.xml <<'XML'
           <?xml version="1.0" encoding="utf-8"?>
           <shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
@@ -872,12 +1047,14 @@ jobs:
           if 'super.onNewIntent(intent);' in s and 'void alarmIntent(Intent in) {' in s:
               s = s.replace('super.onNewIntent(intent);', 'super.onNewIntent(intent);\n    quickIntent(intent);', 1)
               s = s.replace('alarmIntent(getIntent());', 'alarmIntent(getIntent());\n    quickIntent(getIntent());', 1)
-              meth = '  void quickIntent(Intent in) {\n    if (in == null) return;\n    final String k = in.getStringExtra("ticic_quick");\n    if (k == null) return;\n    in.removeExtra("ticic_quick");\n    final WebView w = getBridge().getWebView();\n    w.postDelayed(() -> w.evaluateJavascript("window.__ticicQuick&&window.__ticicQuick(\'" + k + "\')", null), 1400);\n  }\n\n'
+              meth = '  void quickIntent(Intent in) {\n    if (in == null) return;\n    String k0 = in.getStringExtra("ticic_quick");\n    if (k0 == null && in.getComponent() != null && in.getComponent().getClassName().endsWith("VoiceEntry")) k0 = "voice";\n    if (k0 == null) return;\n    if ("vlock".equals(k0)) {\n      try {\n        android.app.KeyguardManager km = (android.app.KeyguardManager) getSystemService(android.content.Context.KEYGUARD_SERVICE);\n        if (km != null && km.isKeyguardLocked() && android.os.Build.VERSION.SDK_INT >= 27) {\n          setShowWhenLocked(true);\n          setTurnScreenOn(true);\n        } else {\n          k0 = "voice";\n        }\n      } catch (Exception e) {\n        k0 = "voice";\n      }\n    }\n    final String k = k0;\n    in.removeExtra("ticic_quick");\n    final WebView w = getBridge().getWebView();\n    w.postDelayed(() -> w.evaluateJavascript("window.__ticicQuick&&window.__ticicQuick(\'" + k + "\')", null), 1400);\n  }\n\n'
               s = s.replace('  void alarmIntent(Intent in) {', meth + '  void alarmIntent(Intent in) {', 1)
           open(d, 'w').write(s)
           p = 'android/app/src/main/AndroidManifest.xml'
           m = open(p).read()
           m = m.replace('</activity>', '<meta-data android:name="android.app.shortcuts" android:resource="@xml/ticic_shortcuts"/>\n</activity>', 1)
+          m = m.replace('</activity>', '</activity>\n<service android:name="com.ticic.daily.VoiceTile" android:label="Ticic Voice" android:icon="@drawable/ic_ticic_tile" android:exported="true" android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"><intent-filter><action android:name="android.service.quicksettings.action.QS_TILE"/></intent-filter></service>\n<activity-alias android:name="com.ticic.daily.VoiceEntry" android:targetActivity="com.ticic.daily.MainActivity" android:label="Ticic Voice" android:icon="@mipmap/ic_launcher" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity-alias>', 1)
+          m = m.replace('</manifest>', '<uses-permission android:name="android.permission.RECORD_AUDIO"/>\n<queries><intent><action android:name="android.speech.RecognitionService"/></intent></queries>\n</manifest>', 1)
           open(p, 'w').write(m)
           PY
       - name: App icon from your logo
@@ -936,7 +1113,7 @@ jobs:
         run: |
           D=android/app/src/main/java/com/ticic/daily
           if [ -f /tmp/safe_widget/MainActivity.java ]; then cp /tmp/safe_widget/MainActivity.java $D/MainActivity.java; cp /tmp/safe_widget/AndroidManifest.xml android/app/src/main/AndroidManifest.xml; fi
-          rm -f $D/TicicVoicePlugin.java
+          rm -f $D/TicicVoicePlugin.java $D/VoiceTile.java
           cd android
           ./gradlew assembleDebug 2>&1 | tee /tmp/build_novoice.log
       - name: Build again without the widget (only runs if the first build failed)
@@ -947,7 +1124,7 @@ jobs:
         run: |
           D=android/app/src/main/java/com/ticic/daily
           if [ -f /tmp/safe_steps/MainActivity.java ]; then cp /tmp/safe_steps/MainActivity.java $D/MainActivity.java; cp /tmp/safe_steps/AndroidManifest.xml android/app/src/main/AndroidManifest.xml; fi
-          rm -f $D/TicicVoicePlugin.java $D/TicicWidget.java $D/TicicWidgetPlugin.java
+          rm -f $D/TicicVoicePlugin.java $D/VoiceTile.java $D/TicicWidget.java $D/TicicWidgetPlugin.java
           cd android
           ./gradlew assembleDebug 2>&1 | tee /tmp/build_nowidget.log
       - name: Build again without the step counter (only runs if the last build failed)
@@ -958,7 +1135,7 @@ jobs:
         run: |
           D=android/app/src/main/java/com/ticic/daily
           if [ -f /tmp/safe_call/MainActivity.java ]; then cp /tmp/safe_call/MainActivity.java $D/MainActivity.java; cp /tmp/safe_call/AndroidManifest.xml android/app/src/main/AndroidManifest.xml; fi
-          rm -f $D/TicicVoicePlugin.java $D/TicicStepsPlugin.java $D/StepsReceiver.java $D/TicicWidget.java $D/TicicWidgetPlugin.java
+          rm -f $D/TicicVoicePlugin.java $D/VoiceTile.java $D/TicicStepsPlugin.java $D/StepsReceiver.java $D/TicicWidget.java $D/TicicWidgetPlugin.java
           cd android
           ./gradlew assembleDebug 2>&1 | tee /tmp/build_nosteps.log
       - name: Build again without the call screen (only runs if the last build failed)
@@ -968,7 +1145,7 @@ jobs:
         run: |
           D=android/app/src/main/java/com/ticic/daily
           if [ -f /tmp/safe/MainActivity.java ]; then cp /tmp/safe/MainActivity.java $D/MainActivity.java; cp /tmp/safe/AndroidManifest.xml android/app/src/main/AndroidManifest.xml; fi
-          rm -f $D/TicicVoicePlugin.java $D/TicicStepsPlugin.java $D/StepsReceiver.java $D/TicicAlarmPlugin.java $D/AlarmReceiver.java $D/TicicWidget.java $D/TicicWidgetPlugin.java
+          rm -f $D/TicicVoicePlugin.java $D/VoiceTile.java $D/TicicStepsPlugin.java $D/StepsReceiver.java $D/TicicAlarmPlugin.java $D/AlarmReceiver.java $D/TicicWidget.java $D/TicicWidgetPlugin.java
           cd android
           ./gradlew assembleDebug 2>&1 | tee /tmp/build_nocall.log
       - name: Release notes

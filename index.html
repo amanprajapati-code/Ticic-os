@@ -633,6 +633,40 @@ html.booting .rise,html.booting .fab{animation-play-state:paused}
 html.booting .aifab{animation-play-state:paused}
 @media (max-height:620px){.aifab{width:50px;height:50px;bottom:calc(86px + var(--sab))}}
 
+
+.strow{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(11,42,91,.08)}
+.stk{flex:none;width:30px;height:30px;border-radius:50%;border:2px solid rgba(var(--blue),.55);display:grid;place-items:center;color:#fff;transition:background .25s,border-color .25s,transform .3s var(--spring)}
+.stk:active{transform:scale(.86)}.stk.on{background:rgb(var(--blue));border-color:rgb(var(--blue))}
+.stt{flex:1;min-width:0;display:flex;flex-direction:column;text-align:left}.stt b{font-size:16px;font-weight:600;overflow-wrap:anywhere}.stt small{font-size:12.5px;color:var(--mu)}
+.strow.dn .stt b{text-decoration:line-through;opacity:.55}
+.stbar{display:grid;grid-template-columns:90px 1fr auto;align-items:center;gap:10px;margin:8px 0;font-size:13.5px}.stbar i{display:block;height:10px;border-radius:99px;background:linear-gradient(90deg,rgb(var(--blue2)),rgb(var(--blue)))}.stbar em{font-style:normal;color:var(--mu);font-size:12.5px}
+html.dark .strow{border-bottom-color:rgba(255,255,255,.09)}
+
+#vo{position:fixed;inset:0;z-index:95;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:calc(var(--sat,0px) + 24px) 24px calc(var(--sab,0px) + 28px);background:rgba(7,12,30,.78);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);opacity:0;transition:opacity .28s ease;color:#fff;--lv:0}
+#vo.on{opacity:1}
+.vo-glow{position:absolute;left:0;right:0;bottom:0;height:46%;overflow:hidden;pointer-events:none}
+.vo-glow i{position:absolute;bottom:-70px;width:62%;height:200px;border-radius:50%;filter:blur(46px);opacity:.85;transform:translate3d(0,calc(var(--lv)*-50px),0) scale(calc(1 + var(--lv)*.5));transition:transform .12s linear;will-change:transform}
+.vo-glow i:nth-child(1){left:-12%;background:#3B82F6;animation:voA 5s ease-in-out infinite alternate}
+.vo-glow i:nth-child(2){left:22%;background:#8B5CF6;animation:voA 6.5s ease-in-out -2s infinite alternate-reverse}
+.vo-glow i:nth-child(3){left:48%;background:#EC4899;animation:voA 5.5s ease-in-out -1s infinite alternate}
+.vo-glow i:nth-child(4){left:30%;width:46%;background:#22D3EE;animation:voA 7s ease-in-out -3s infinite alternate-reverse}
+@keyframes voA{from{margin-left:-6%}to{margin-left:8%}}
+.vo-mid{position:relative;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;width:100%;max-width:420px;text-align:center}
+.vo-orb{position:relative;width:108px;height:108px;display:grid;place-items:center}
+.vo-orb b{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,#3B82F6,#8B5CF6,#EC4899,#22D3EE,#3B82F6);filter:blur(1px);animation:voSpin 3.2s linear infinite;transform:scale(calc(.78 + var(--lv)*.4))}
+.vo-orb b:nth-child(2){opacity:.45;filter:blur(14px);transform:scale(calc(1 + var(--lv)*.55));animation-duration:4.6s;animation-direction:reverse}
+.vo-orb b:nth-child(3){inset:22px;background:rgba(7,12,30,.9);animation:none;filter:none;transform:scale(calc(.9 + var(--lv)*.2))}
+@keyframes voSpin{to{rotate:360deg}}
+.vo-state{font-size:15px;font-weight:600;letter-spacing:.3px;opacity:.8}
+.vo-text{font-size:26px;line-height:1.3;font-weight:600;min-height:68px;overflow-wrap:anywhere;max-height:34vh;overflow:hidden}
+.vo-btns{position:relative;display:flex;gap:14px;align-items:center}
+.vo-b{height:56px;min-width:56px;border-radius:28px;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.14);color:#fff;font:600 17px Inter,system-ui,sans-serif;display:grid;place-items:center;padding:0 22px}
+.vo-done{background:#fff;color:#0B2A5B;border-color:#fff}
+@media (prefers-reduced-motion:reduce){.vo-orb b,.vo-glow i{animation:none}}
+
+html.vlock #app,html.vlock #nav,html.vlock #aifab,html.vlock #sheets,html.vlock #lock,html.vlock #onb,html.vlock #call{visibility:hidden!important}
+#vl{position:fixed;inset:0;z-index:90;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:32px;text-align:center;color:#fff;background:radial-gradient(80% 50% at 50% 100%,rgba(59,130,246,.45),transparent 70%),linear-gradient(180deg,#0B1B4A,#070C1E)}
+#vl .vl-logo{width:64px;height:64px;border-radius:18px}.vl-a{font-size:28px;font-weight:700}.vl-b{font-size:17px;opacity:.85;white-space:pre-line;max-width:340px;overflow-wrap:anywhere}
 /* dark mode */
 html.dark{color-scheme:dark;--navy:226,236,255;--tx:#E8EFFF;--mu:rgba(226,236,255,.7);--mu2:rgba(226,236,255,.48);--line:rgba(255,255,255,.09);--glass:rgba(22,32,58,.86)}
 html.dark,html.dark body{background:#0A1020}
@@ -1368,7 +1402,7 @@ function openSettings() {
     profileBlock() + '<div class="lbl">Reminders</div><div class="panel" id="s-status"></div>' +
     '<div class="lbl">Notification sound</div>' + soundChips(st.sound, 's-sound', 'sound', false) +
     '<div class="lbl">Feedback</div><p class="hint">Tell us what works and what to improve.</p><div class="btnrow"><button type="button" class="btn ghost sm" data-act="s-feedback">Send feedback</button></div>' +
-    '<div class="lbl">Your data</div><p class="hint">Everything stays on this phone. Back it up before you uninstall.</p><div class="btnrow"><button type="button" class="btn ghost sm" data-act="s-export">Back up</button><button type="button" class="btn ghost sm" data-act="s-import">Restore</button><button type="button" class="btn ghost sm" data-act="s-examples">Add examples</button><button type="button" class="btn ghost sm" data-act="hl-open">Healthy reminders</button><button type="button" class="btn ghost sm" data-act="s-privacy">Privacy</button><button type="button" class="btn ghost sm danger" data-act="s-erase" id="s-erase">Erase all</button></div><div id="s-data"></div>', 'tall');
+    '<div class="lbl">Your data</div><p class="hint">Tasks and routines are saved online if you have an account. College files stay only on this phone, so save a backup file before you uninstall.</p><div class="btnrow"><button type="button" class="btn glow sm" data-act="s-fbackup">Backup file</button><button type="button" class="btn ghost sm" data-act="s-frestore">Restore file</button><button type="button" class="btn ghost sm" data-act="s-export">Copy text</button><button type="button" class="btn ghost sm" data-act="s-import">Paste text</button><button type="button" class="btn ghost sm" data-act="s-examples">Add examples</button><button type="button" class="btn ghost sm" data-act="hl-open">Healthy reminders</button><button type="button" class="btn ghost sm" data-act="s-privacy">Privacy</button><button type="button" class="btn ghost sm danger" data-act="s-erase" id="s-erase">Erase all</button></div><div id="s-data"></div>', 'tall');
   settingsStatus();
 }
 async function settingsStatus() {
@@ -2540,6 +2574,30 @@ const ACT = {
     toast(how === 'copied' ? 'Feedback copied. Paste it in a message to us.' : 'Thank you for your feedback');
   },
   's-set'(el) { S.settings[el.dataset.f] = Number(el.dataset.v); chipSelect(el); commit(); },
+  async 's-fbackup'() {
+    const d = $('#s-data'); d.innerHTML = '<p class="hint">Making your backup...</p>';
+    try {
+      const recs = await FDB.all(), files = [];
+      for (const r of recs) files.push({ id: r.id, grp: r.grp, name: r.name, type: r.type, size: r.size, data: await b64(r.blob) });
+      const out = JSON.stringify({ app: 'ticic', v: 1, at: new Date().toISOString(), state: cloudPayload(), files });
+      const blob = new Blob([out], { type: 'application/json' }), nm = 'Ticic_backup_' + today() + '.json';
+      S.lastBackup = Date.now(); save();
+      d.innerHTML = '<p class="hint">Backup ready: ' + S.tasks.length + ' tasks, ' + files.length + ' file' + (files.length === 1 ? '' : 's') + ' (' + bytes(out.length) + '). Save it in Google Drive, or send it to yourself on WhatsApp.</p>';
+      await shareFiles([{ name: nm, type: 'application/json', size: out.length, blob }]);
+    } catch (e) { d.innerHTML = '<p class="hint">Could not make the backup. Free some space on the phone and try again.</p>'; }
+  },
+  's-frestore'() { const i = $('#fb-in'); if (i) i.click(); else { $('#s-data').innerHTML = '<input type="file" id="fb-in" accept=".json,application/json" hidden>'; $('#fb-in').click(); } },
+  's-frestore-go'(el) {
+    const b = FBK.pending; if (!b) return; if (!arm(el, 'Tap again to replace')) return;
+    (async () => {
+      const keep = { profile: S.profile, bioOn: S.bioOn, noLogin: S.noLogin, lockOn: S.lockOn, cloudAt: S.cloudAt, name: S.name }, f0 = freshState();
+      S = Object.assign(f0, b.state); S.settings = Object.assign(f0.settings, (b.state || {}).settings || {}); S.onboarded = true;
+      if (keep.profile) { S.profile = keep.profile; S.bioOn = keep.bioOn; S.noLogin = keep.noLogin; S.lockOn = keep.lockOn; S.cloudAt = keep.cloudAt; }
+      let n = 0;
+      for (const f of (b.files || [])) { try { const bin = atob(f.data), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); await FDB.put({ id: f.id, grp: f.grp, name: f.name, type: f.type, size: f.size, blob: new Blob([u], { type: f.type }) }); n++; } catch (e) {} }
+      FBK.pending = null; commit(); closeSheet(); toast('Restored ' + S.tasks.length + ' tasks and ' + n + ' files');
+    })();
+  },
   async 's-export'() {
     const d = $('#s-data'); d.innerHTML = '<p class="hint">Copy this text and keep it somewhere safe, like a note to yourself.</p><textarea id="s-json" rows="5" readonly></textarea><button type="button" class="btn ghost sm" data-act="s-copy">Copy again</button>';
     S.lastBackup = Date.now(); save(); const ta = $('#s-json'); ta.value = JSON.stringify(S); toast((await copyText(ta.value, ta)) ? 'Copied backup' : 'Select the text and copy it');
@@ -2780,6 +2838,8 @@ function applyAccent() { const a = ACCENTS[S.accent] || ACCENTS.blue; document.d
 function openTools() {
   V.sheet = 'tools';
   openSheet('<div class="shead"><h2>Tools</h2><button type="button" class="link" data-act="sheet-close">Done</button></div><div class="hlist">' +
+    toolRow('study-open', 'book', 'Study', 'Homework, study time, subjects') +
+    toolRow('vt-open', 'mic', 'Voice from lock screen', 'Say a task without opening the app') +
     toolRow('tt-open', 'camera', 'Import timetable', 'From ChatGPT text, a photo or a PDF') +
     toolRow('col-open', 'book', 'College', 'Timetable, attendance, exams, grades') +
     toolRow('cal-open', 'cal', 'Calendar', 'See your month at a glance') +
@@ -2837,7 +2897,7 @@ function chime() {
 }
 function focDone() {
   FOC.run = false; FOC.left = FOC.min * 60; clearInterval(FOC.tmr);
-  const d = today(); S.focus = S.focus || {}; S.focus[d] = (S.focus[d] || 0) + FOC.min; save(); chime(); buzz([200, 100, 200, 100, 400]); toast('Focus done. Take a short break.'); focPaint();
+  const d = today(); S.focus = S.focus || {}; S.focus[d] = (S.focus[d] || 0) + FOC.min; studyLog(FOC.sub || ((FOC.task && taskById(FOC.task)) || {}).csub || '', FOC.min, true); save(); chime(); buzz([200, 100, 200, 100, 400]); toast('Focus done. Take a short break.'); focPaint();
 }
 function focTick() { if (FOC.run && Date.now() >= FOC.end) focDone(); focPaint(); }
 function openFocus(tid) {
@@ -2942,18 +3002,77 @@ function planText() {
 function taskText(t) {
   return t.title + (t.due ? '\nDue: ' + relDay(t.due) + (t.time ? ' at ' + fmtTime(t.time) : '') : '') + (t.note ? '\nNote: ' + t.note : '') + ((t.steps || []).length ? '\n' + t.steps.map(s => (s.done ? '[x] ' : '[ ] ') + s.t).join('\n') : '') + '\nSent from Ticic';
 }
-/* voice */
+/* voice: live listening screen, like Gemini */
+const VO = { el: null, lv: 0, cancel: null, stop: null };
+function voShow() {
+  voHide(true); const el = document.createElement('div'); el.id = 'vo'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Listening');
+  el.innerHTML = '<div class="vo-glow" aria-hidden="true"><i></i><i></i><i></i><i></i></div><div class="vo-mid"><div class="vo-orb" aria-hidden="true"><b></b><b></b><b></b></div><div class="vo-state" id="vo-state" aria-live="polite">Listening...</div><div class="vo-text" id="vo-text"></div></div><div class="vo-btns"><button type="button" class="vo-b" id="vo-x" aria-label="Cancel">' + ic('x', 22) + '</button><button type="button" class="vo-b vo-done" id="vo-ok">Done</button></div>';
+  document.body.appendChild(el); VO.el = el; VO.lv = 0; el.style.setProperty('--lv', 0);
+  $('#vo-x').addEventListener('click', () => { if (VO.cancel) VO.cancel(); }); $('#vo-ok').addEventListener('click', () => { if (VO.stop) VO.stop(); });
+  requestAnimationFrame(() => el.classList.add('on')); buzz([10]);
+}
+function voHide(now) { const el = VO.el; VO.el = null; VO.cancel = VO.stop = null; if (!el) return; el.classList.remove('on'); if (now) el.remove(); else setTimeout(() => el.remove(), 320); }
+function voLevel(x) { if (!VO.el) return; const l = Math.max(0, Math.min(1, (Number(x) + 2) / 12)); VO.lv = VO.lv * .55 + l * .45; VO.el.style.setProperty('--lv', VO.lv.toFixed(2)); }
+function voText(t) { const e = $('#vo-text'); if (e) e.textContent = t || ''; const st = $('#vo-state'); if (st && t) st.textContent = 'Listening...'; }
+function voiceLive(nv) {
+  return new Promise(async (resolve, reject) => {
+    voShow(); let done = false; const subs = [];
+    const finish = (v, err) => { if (done) return; done = true; subs.forEach(h => { try { h.remove(); } catch (e) {} }); voHide(); if (err) reject(err); else resolve(v); };
+    try {
+      subs.push(await nv.addListener('rms', e => voLevel(e && e.level)));
+      subs.push(await nv.addListener('partial', e => voText(e && e.text)));
+      subs.push(await nv.addListener('end', () => { const st = $('#vo-state'); if (st) st.textContent = 'Thinking...'; }));
+      subs.push(await nv.addListener('final', e => { const t = (e && e.text) || ''; voText(t); const st = $('#vo-state'); if (st) st.textContent = t ? 'Got it' : 'Listening...'; setTimeout(() => finish(t), 380); }));
+      subs.push(await nv.addListener('error', e => { const c = e && e.code; if (c === 7 || c === 6 || c === 5) finish(''); else finish(null, new Error('voice error ' + c)); }));
+      VO.cancel = () => { try { nv.cancel(); } catch (e) {} finish(null); };
+      VO.stop = () => { try { nv.stop(); } catch (e) {} const st = $('#vo-state'); if (st) st.textContent = 'Thinking...'; };
+      await nv.start();
+    } catch (e) { finish(null, e); }
+  });
+}
+async function voiceCapture(nv) {
+  try { return await voiceLive(nv); } catch (e) { /* the live screen is not available here, use the phone's own dialog */ }
+  const r = await nv.listen(); return r && r.text ? r.text : '';
+}
 async function voiceAdd() {
   const inp = $('#qa-in'); if (!inp) return; const fill = tx => { if (!tx) return; inp.value = tx.charAt(0).toUpperCase() + tx.slice(1); inp.dispatchEvent(new Event('input', { bubbles: true })); inp.focus(); };
-  const nv = PL('TicicVoice'); if (nv) { try { const r = await nv.listen(); if (r && r.text) fill(r.text); else toast('Did not catch that. Try again.'); } catch (e) { toast('Voice is not available. Use your keyboard mic.'); inp.focus(); } return; }
+  const nv = PL('TicicVoice'); if (nv) { try { const tx = await voiceCapture(nv); if (tx) fill(tx); else if (tx === '') toast('Did not catch that. Try again.'); } catch (e) { toast('Voice is not available. Use your keyboard mic.'); inp.focus(); } return; }
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (SR) { try { const r = new SR(); r.lang = navigator.language || 'en-IN'; r.onresult = e => fill(e.results[0][0].transcript); r.onerror = () => toast('Voice is not available. Use your keyboard mic.'); r.start(); toast('Listening...'); return; } catch (e) {} }
   inp.focus(); toast('Tap the mic on your keyboard and speak');
 }
-window.__ticicQuick = k => { try { if (k === 'voice') { openAI(true); return; } openQuickAdd(); } catch (e) {} };
+/* lock-screen voice: only the listening screen and a short result are shown, never your tasks */
+function vlMsg(a, b) { const t = $('#vl-a'), u = $('#vl-b'); if (t) t.textContent = a; if (u) u.textContent = b || ''; }
+async function vlockRun() {
+  const nv = PL('TicicVoice'), root = document.documentElement; root.classList.add('vlock');
+  if (!$('#vl')) { const vl = document.createElement('div'); vl.id = 'vl'; vl.innerHTML = logoImg('vl-logo') + '<div class="vl-a" id="vl-a">Ticic Voice</div><div class="vl-b" id="vl-b"></div>'; document.body.appendChild(vl); }
+  const end = ms => setTimeout(() => { root.classList.remove('vlock'); const e = $('#vl'); if (e) e.remove(); try { if (nv && nv.closeApp) nv.closeApp(); } catch (er) {} }, ms);
+  if (!nv) { vlMsg('Voice is not available', ''); return end(1500); }
+  let tx = null; try { tx = await voiceCapture(nv); } catch (e) { tx = null; }
+  if (!tx) { vlMsg(tx === '' ? 'Did not catch that' : 'Cancelled', tx === '' ? 'Tap the tile and try again.' : ''); return end(1300); }
+  vlMsg('Got it', '"' + tx + '"');
+  let r; try { if (!aiOn()) throw new Error('off'); r = await aiRemote(tx); } catch (e) { r = aiLocal(tx); }
+  if (r && r.tasks && r.tasks.length) {
+    let n = 0; const made = r.tasks.map(t => ({ id: uid(), title: t.title, note: '', due: t.due, time: t.time, remind: t.remind, repeat: t.repeat, prio: 'none', sound: 'default', nudge: true, list: 'inbox', steps: [], done: false, created: Date.now() + (n++), ai: true }));
+    made.forEach(t => S.tasks.push(t)); commit(); buzz([20, 40, 20]);
+    vlMsg('Added', made.map(t => t.title + (t.due ? ' · ' + relDay(t.due) + (t.time ? ' ' + fmtTime(t.time) : '') : '')).join('\n'));
+  } else vlMsg((r && r.reply) || 'I could not find a task in that.', '');
+  end(2800);
+}
+window.__ticicQuick = k => { try { if (k === 'vlock') { vlockRun(); return; } if (k === 'voice') { openAI(true); return; } openQuickAdd(); } catch (e) {} };
+function openVoiceSetup() {
+  V.sheet = 'vset'; const nv = PL('TicicVoice');
+  openSheet('<div class="shead"><h2>Voice from the lock screen</h2><button type="button" class="link" data-act="sheet-close">Done</button></div>' +
+    '<p class="fine" style="text-align:left;font-size:14.5px;margin:0 0 12px">Add the <b>Ticic Voice</b> tile to your quick settings. Then you can swipe down, tap it and say your task, even when the phone is locked. Only the listening screen shows, never your tasks.</p>' +
+    '<button type="button" class="btn glow big" data-act="vt-add">Add the tile</button><div id="vt-msg" class="fine" style="text-align:left;font-size:14px;margin:12px 2px"></div>' +
+    '<div class="lbl">Or by hand</div><p class="fine" style="text-align:left;font-size:14px;margin:0">Swipe down twice from the top, tap the pencil or Edit, then drag <b>Ticic Voice</b> up into your tiles.</p>' +
+    '<div class="lbl">Also</div><p class="fine" style="text-align:left;font-size:14px;margin:0">Say "Hey Google, open Ticic Voice".<br>Some phones need you to allow quick settings on the lock screen, and some ask you to unlock first.</p>' + (nv ? '' : '<p class="fine" style="color:#d92d20">This only works in the installed app.</p>'), 'tall');
+}
 document.addEventListener('visibilitychange', () => { if (!document.hidden) focTick(); });
 Object.assign(ACT, {
   tools() { openTools(); },
+  'vt-open'() { closeAll(); setTimeout(openVoiceSetup, 330); },
+  async 'vt-add'() { const nv = PL('TicicVoice'), m = $('#vt-msg'); if (!m) return; if (!nv || !nv.addTile) { m.textContent = 'Use the steps below to add it by hand.'; return; } try { await nv.addTile(); m.textContent = 'Tap Add on the message from your phone.'; } catch (e) { m.textContent = 'Your phone needs it added by hand. Use the steps below.'; } },
   'theme-set'(el) { S.theme = el.dataset.v; save(); applyTheme(); chipSelect(el); cloudPush(); },
   'acc-set'(el) { S.accent = el.dataset.v; save(); applyAccent(); chipSelect(el); cloudPush(); },
   'cal-open'() { openCal(0); }, 'cal-nav'(el) { openCal(CAL + Number(el.dataset.o)); },
@@ -3018,6 +3137,7 @@ const FDB = {
   put(rec) { return this.tx('readwrite', s => s.put(rec)); },
   del(id) { return this.tx('readwrite', s => s.delete(id)); },
   async byGrp(g) { const db = await this.open(); return new Promise((res, rej) => { const r = db.transaction('f').objectStore('f').index('grp').getAll(g); r.onsuccess = () => res(r.result || []); r.onerror = () => rej(r.error); }); },
+  async all() { const db = await this.open(); return new Promise((res, rej) => { const r = db.transaction('f').objectStore('f').getAll(); r.onsuccess = () => res(r.result || []); r.onerror = () => rej(r.error); }); },
   async delGrp(g) { const a = await this.byGrp(g); for (const x of a) await this.del(x.id); }
 };
 const bytes = n => n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB';
@@ -3241,6 +3361,78 @@ Object.assign(ACT, {
     closeSheet(); commit(); toast(n ? n + (n > 1 ? ' routines added' : ' routine added') : 'Those routines are already there');
   }
 });
+const FBK = { pending: null };
+document.addEventListener('change', async e => {
+  if (!e.target || e.target.id !== 'fb-in') return; const f = e.target.files && e.target.files[0]; e.target.value = ''; if (!f) return;
+  const d = $('#s-data'); let b;
+  try { b = JSON.parse(await f.text()); if (!b || b.app !== 'ticic' || !b.state || !Array.isArray(b.state.tasks)) throw 0; } catch (er) { if (d) d.innerHTML = '<p class="hint">That does not look like a Ticic backup file.</p>'; return; }
+  FBK.pending = b;
+  if (d) d.innerHTML = '<p class="hint">Backup from ' + esc(String(b.at || '').slice(0, 10)) + ': ' + b.state.tasks.length + ' tasks, ' + (b.files || []).length + ' files. Restoring replaces what is on this phone. Your login stays.</p><button type="button" class="btn glow sm" data-act="s-frestore-go">Restore this backup</button>';
+});
+/* ---------- study: homework you can tick and untick, plus study time by subject ---------- */
+const ST = { sub: '', when: 'tonight', tab: 'todo' };
+const fmtDur = m => m >= 60 ? Math.floor(m / 60) + 'h' + (m % 60 ? ' ' + (m % 60) + 'm' : '') : m + ' min';
+function studyLog(sub, min, noFocus) {
+  const d = today(); S.study = S.study || {}; const o = S.study[d] = S.study[d] || {}; o[sub || ''] = (o[sub || ''] || 0) + min;
+  if (!noFocus) { S.focus = S.focus || {}; S.focus[d] = (S.focus[d] || 0) + min; }
+}
+function studyWeek() {
+  const td = today(), by = {}; let tot = 0, tod = (S.focus || {})[td] || 0;
+  for (let k = 0; k < 7; k++) { const d = addDays(td, -k); tot += (S.focus || {})[d] || 0; const o = (S.study || {})[d]; if (o) Object.keys(o).forEach(x => { by[x] = (by[x] || 0) + o[x]; }); }
+  return { tod, tot, by };
+}
+const hwList = () => S.tasks.filter(t => t.hw);
+function studyBody() {
+  const c = colS(), w = studyWeek(), todo = hwList().filter(t => !t.done).sort((a, b) => (a.due || '9') < (b.due || '9') ? -1 : 1), done = hwList().filter(t => t.done).sort((a, b) => (b.doneAt || '') < (a.doneAt || '') ? -1 : 1).slice(0, 8);
+  const subName = id => id ? (colName(id) || 'Other') : 'Other';
+  const row = t => { const k = t.due ? dayDiff(t.due, today()) : null, late = !t.done && k !== null && k < 0;
+    return '<div class="strow' + (t.done ? ' dn' : '') + '"><button type="button" class="stk' + (t.done ? ' on' : '') + '" role="checkbox" aria-checked="' + !!t.done + '" aria-label="' + (t.done ? 'Mark not done: ' : 'Mark done: ') + esc(t.title) + '" data-act="st-tick" data-id="' + t.id + '">' + (t.done ? ic('check', 16) : '') + '</button>' +
+      '<button type="button" class="stt" data-act="st-open" data-id="' + t.id + '"><b>' + esc(t.title) + '</b><small' + (late ? ' style="color:#d92d20"' : '') + '>' + (t.csub ? esc(colName(t.csub)) + ' · ' : '') + (t.due ? (late ? 'Late · ' : '') + relDay(t.due) + (t.time ? ' ' + fmtTime(t.time) : '') : 'No date') + '</small></button></div>'; };
+  const subs = c.subs.map(x => [x.id, x.name]).concat([['', 'Other']]);
+  const wk = Object.keys(w.by).sort((a, b) => w.by[b] - w.by[a]), mx = Math.max(1, ...wk.map(x => w.by[x]));
+  return '<div class="hsum"><div><b>' + fmtDur(w.tod) + '</b><small>Studied today</small></div><div><b>' + fmtDur(w.tot) + '</b><small>Last 7 days</small></div><div><b>' + todo.length + '</b><small>Homework left</small></div></div>' +
+    '<div class="lbl">Subject</div>' + chipRow(subs, ST.sub, 'st-sub', 'v') +
+    '<div class="fld full" style="margin-top:8px"><label class="vh" for="st-new">New subject</label><input id="st-new" type="text" placeholder="New subject, like Physics" autocomplete="off" maxlength="30" enterkeyhint="done"></div>' +
+    '<div class="lbl">Study time</div><div class="btnrow"><button type="button" class="btn glow sm" data-act="st-timer">Start timer</button><button type="button" class="btn ghost sm" data-act="st-min" data-v="15">+15 min</button><button type="button" class="btn ghost sm" data-act="st-min" data-v="30">+30 min</button><button type="button" class="btn ghost sm" data-act="st-min" data-v="60">+1 hour</button></div>' +
+    '<div class="lbl">Add homework</div><div class="fld full"><label class="vh" for="st-in">Homework</label><input id="st-in" type="text" placeholder="Maths exercise 3, Physics notes..." autocomplete="off" maxlength="80" enterkeyhint="done"></div>' +
+    chipRow([['tonight', 'Tonight'], ['tomorrow', 'Tomorrow'], ['3d', 'In 3 days'], ['none', 'No date']], ST.when, 'st-when', 'v') + '<button type="button" class="btn glow big" data-act="st-add" style="margin-top:12px">Add homework</button>' +
+    '<div class="lbl">To do</div>' + (todo.length ? todo.map(row).join('') : '<p class="hint">Nothing left. Add your homework above.</p>') +
+    (done.length ? '<div class="lbl">Done. Tap the circle to undo</div>' + done.map(row).join('') : '') +
+    (wk.length ? '<div class="lbl">This week by subject</div>' + wk.map(x => '<div class="stbar"><span>' + esc(subName(x)) + '</span><i style="width:' + Math.max(6, Math.round(w.by[x] / mx * 100)) + '%"></i><em>' + fmtDur(w.by[x]) + '</em></div>').join('') : '');
+}
+function openStudy() {
+  V.sheet = 'study';
+  openSheet('<div class="shead"><h2>Study</h2><button type="button" class="link" data-act="sheet-close">Done</button></div><div id="st-body">' + studyBody() + '</div>', 'tall');
+}
+function studyPaint() {
+  const b = $('#st-body'); if (!b) return; const keep = { n: ($('#st-new') || {}).value || '', h: ($('#st-in') || {}).value || '' };
+  b.innerHTML = studyBody(); if ($('#st-new')) $('#st-new').value = keep.n; if ($('#st-in')) $('#st-in').value = keep.h;
+}
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter' || !e.target) return;
+  if (e.target.id === 'st-in') { e.preventDefault(); ACT['st-add'](); } else if (e.target.id === 'st-new') { e.preventDefault(); ACT['st-newsub'](); }
+});
+Object.assign(ACT, {
+  'study-open'() { closeAll(); setTimeout(openStudy, 330); },
+  'st-sub'(el) { ST.sub = el.dataset.v; studyPaint(); },
+  'st-when'(el) { ST.when = el.dataset.v; studyPaint(); },
+  'st-newsub'() { const i = $('#st-new'), n = i && i.value.trim(); if (!n) return; const c = colS(); const f = c.subs.find(x => x.name.toLowerCase() === n.toLowerCase()); if (f) { ST.sub = f.id; i.value = ''; return studyPaint(); } const id = uid(); c.subs.push({ id, name: n.charAt(0).toUpperCase() + n.slice(1), p: 0, t: 0 }); ST.sub = id; i.value = ''; commit(); studyPaint(); },
+  'st-add'() {
+    const i = $('#st-in'), n = i && i.value.trim(); if (!n) { shake('#st-in'); const f = i && i.closest('.fld'); if (f) { f.classList.remove('shake'); void f.offsetWidth; f.classList.add('shake'); } return; }
+    const td = today(), w = ST.when; let due = null, time = null, remind = 'none';
+    if (w === 'tonight') { due = td; time = '20:00'; remind = 0; } else if (w === 'tomorrow') { due = addDays(td, 1); remind = 'morning'; } else if (w === '3d') { due = addDays(td, 3); remind = 'morning'; }
+    colS(); S.tasks.push({ id: uid(), title: n, note: '', due, time, remind, repeat: 'none', prio: 'none', sound: 'default', nudge: false, list: 'college', steps: [], done: false, created: Date.now() + S.tasks.length, hw: true, csub: ST.sub || '' });
+    i.value = ''; commit(); studyPaint(); toast('Homework added');
+  },
+  'st-tick'(el) {
+    const t = taskById(el.dataset.id); if (!t) return;
+    if (t.done) { uncomplete(t); toast('Marked not done'); } else completeTask(t, true);
+    commit(); studyPaint();
+  },
+  'st-open'(el) { if (!el || !el.dataset || !el.dataset.id) { closeAll(); setTimeout(openStudy, 330); return; } closeSheet(); setTimeout(() => openTask(el.dataset.id), 340); },
+  'st-timer'() { FOC.sub = ST.sub; closeSheet(); setTimeout(() => openFocus(''), 340); },
+  'st-min'(el) { const m = +el.dataset.v; studyLog(ST.sub, m); commit(); studyPaint(); toast('Added ' + fmtDur(m) + ' of study'); }
+});
 Object.assign(ACT, {
   'col-open'() { openCollege(); },
   'col-sub'() { subPaint(); }, 'col-sub-add'() { subAdd($('#cs-name').value); }, 'col-sub-hint'(el) { subAdd(el.dataset.v); }, 'col-sub-del'(el) { subDel(el.dataset.id); },
@@ -3349,7 +3541,7 @@ function aiCancel() { clearTimeout(AI.timer); AI.timer = 0; AI.pend = null; cons
 async function aiMic() {
   if (AI.busy) return; try { speechSynthesis.cancel(); } catch (e) {}
   const nv = PL('TicicVoice');
-  if (nv) { try { const r = await nv.listen(); if (r && r.text) return aiSend(r.text, true); toast('Did not catch that. Try again.'); } catch (e) { toast('Voice is not available. Use your keyboard mic.'); const i = $('#ai-in'); if (i) i.focus(); } return; }
+  if (nv) { try { const tx = await voiceCapture(nv); if (tx) return aiSend(tx, true); if (tx === '') toast('Did not catch that. Try again.'); } catch (e) { toast('Voice is not available. Use your keyboard mic.'); const i = $('#ai-in'); if (i) i.focus(); } return; }
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (SR) { try { const r = new SR(); r.lang = navigator.language || 'en-IN'; r.onresult = e => aiSend(e.results[0][0].transcript, true); r.onerror = () => toast('Voice is not available. Use your keyboard mic.'); r.start(); toast('Listening...'); return; } catch (e) {} }
   const i = $('#ai-in'); if (i) i.focus(); toast('Tap the mic on your keyboard and speak');
